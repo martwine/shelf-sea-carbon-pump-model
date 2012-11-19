@@ -4,7 +4,7 @@
 library("seacarb")
 
 eval_CO2_sys<-function(TA,DIC,S,T){
-	return carb(flag=15, var1=0.002, var2=0.002, S=35, T=25, P=0, Pt=0, Sit=0, k1k2="x", kf="x", ks="d", pHscale="T", b="l10")
+	carb(flag=15, var1=TA, var2=DIC, S=35, T=25, P=0, Pt=0, Sit=0, k1k2="x", kf="x", ks="d", pHscale="T", b="l10")
 }
 
 
