@@ -102,7 +102,7 @@ redfield<-6.6 #redfieldian C:N
 sl_DOM_CtoN<-redfield
 
 # Proportion of spring bloom N turned into semi-labile DON
-nitrate_slDOM_conv<-0.5
+nitrate_slDOM_conv<-0
 
 # degradation rate of sl_DON
 sl_DON_deg<-0.02 #day-1
@@ -212,7 +212,6 @@ eval_timestep<-function(timestep,current_state){
 		stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
 		stepdata$BML_DIC<-eval_BML_DIC(dNO3, BML_DIC)
 		stepdata$BML_NO3<-eval_BML_NO3(dNO3, BML_NO3)
-
 	} else if (timestep==mix_day) {
 		#do the mixing
 		mixed_DIC<-calc_mix(DIC,BML_DIC)
