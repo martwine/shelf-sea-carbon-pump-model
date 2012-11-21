@@ -3,7 +3,9 @@
 #################################################################
 
 
-RUN_NAME<-"DEFAULT"
+RUN_NAME<-"slDON_prod_ref_run"
+
+out_dir<-"results"
 
 ## mode can be 1-box (surface) or 2-vertical boxes (surface and 
 ## depth), which are mixed for the winter
@@ -65,7 +67,7 @@ delta_pCO2<-0
 # ammonium turnover rate
 #rho_NH4<-0.25 #uM day-1
 
-redfield<-6.6 #C:N for 'Redfieldia`' processes
+redfield<-6.6 #C:N for 'Redfieldian' processes
 
 ## C:N ratio of semi-labile DOM produced during bloom
 slDOM_C_TO_N<-redfield

@@ -41,8 +41,8 @@ init_pCO2<-min_pCO2+AMPLITUDE
 
 
 #initalise DIC from pCO2 and estimated TA 
-init_DIC<-1e6*carb(flag=24,init_pCO2-delta_pCO2,init_TA*1e-6)$DIC[1]
-
+init_DIC<-1e6*carb(flag=24,(init_pCO2-delta_pCO2),init_TA*1e-6)$DIC[1]
+print(paste("init DIC:", init_DIC))
 
 #wind speed cycle
 wind_speed<-MIN_WIND+(0.5*(MAX_WIND-MIN_WIND))*(1+sin((seq(from=90,to=450,length.out=365)*pi)/180))
@@ -173,6 +173,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
 	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth,wind)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
+	stepdata$deltapCO2<-pCO2_atmos-pCO2
 	if(MODE==2){
 		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(dNO3, BML_DIC),stepdata$DIC)
 		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(dNO3, BML_NO3),ifelse(timestep==mix_day,NO3,BML_NO3))	
@@ -188,10 +189,10 @@ eval_timestep<-function(timestep,current_state){
 #     model control                                              #
 ################################################################################
 
-model_run<-function(run_name){
+model_run<-function(){
 
 	timestep = 1
-	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0)
+	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2)
 	if(MODE==2){
 		model_output$BML_DIC=init_DIC
 		model_output$BML_NO3=WINTER_NITRATE
@@ -203,22 +204,10 @@ model_run<-function(run_name){
 		timestep=timestep+1
 	}
 	model<-cbind(box,model_output)
-	write.csv(model,file=paste(run_name,".csv"))
-	pdf(paste(run_name,".pdf"))
-		
-	
-		par(mfrow=c(6,1),mar=c(3,4,0,0))
-		plot(model$day,model$temp,type="l")
-		plot(model$day,model$pCO2_atmos,type="l")
-		plot(model$day,model$nitrate,type="l")
-		plot(model$day,model$DIC,type="l")
-		plot(model$day,model$slDOC,type="l")
-		plot(model$day,model$slDON,type="l")	
-	dev.off()
-	print(cumsum(model$airseaFlux))
+
 	model	
 }
 
-model_run(RUN_NAME)
+
 
 
