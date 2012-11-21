@@ -134,60 +134,50 @@ calc_mix<-function(sml_conc,bml_conc){
 ###################################################################################
 
 eval_timestep<-function(timestep,current_state){
+	
+	# get the boundary conditions for the current timestep
 	timestep_row<-box[timestep,]	
 	pCO2_atmos<-timestep_row$pCO2_atmos
 	dNO3<-timestep_row$dNO3
 	temp<-timestep_row$temp
 	wind<-timestep_row$wind
 
+	# get the current state of the model at the end of the previous timestep
 	DIC<-current_state$DIC
 	slDOC<-current_state$slDOC
 	slDON<-current_state$slDON
 	pCO2<-current_state$pCO2
-	BML_DIC<-current_state$BML_DIC
-	BML_NO3<-current_state$BML_NO3
+	# just get BML ones for the 2-box model
+	if (MODE==2){
+		BML_DIC<-current_state$BML_DIC
+		BML_NO3<-current_state$BML_NO3
+	}
 	stepdata<-new.env()
 
-	if(timestep<mix_day){
-		stepdata$slDOC<-eval_slDOC(dNO3, slDOC)
-		stepdata$slDON<-eval_slDON(dNO3, slDON)
-		stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-		if(timestep<BLOOM_START_DAY){
-			stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth=COLUMN_DEPTH,wind)
-		} else {
-			stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth=SMLD,wind)
-		}		
-		stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
-		stepdata$BML_DIC<-eval_BML_DIC(dNO3, BML_DIC)
-		stepdata$BML_NO3<-eval_BML_NO3(dNO3, BML_NO3)
-	} else if (timestep==mix_day) {
+	#define depths for 2-box model
+	if(MODE==2){
+		depth<-ifelse(timestep >= BLOOM_START_DAY && timestep < mix_day,SMLD,COLUMN_DEPTH)
+	} else {depth=SMLD}
+
+	if(MODE==2 && timestep==mix_day){
 		#do the mixing
-		mixed_DIC<-calc_mix(DIC,BML_DIC)
-		mixed_NO3<-calc_mix(0,BML_NO3)
-		mixed_slDON<-calc_mix(slDON,0)
-		mixed_slDOC<-calc_mix(slDOC,0)
-		mixed_pCO2<-carb(flag=15,init_TA*1e-6,mixed_DIC*1e-6)$pCO2[1]
-		
-		#then run the timestep
-		stepdata$slDOC<-eval_slDOC(dNO3, mixed_slDOC)
-		stepdata$slDON<-eval_slDON(dNO3, mixed_slDON)
-		stepdata$airseaFlux<-calc_as_flux(mixed_pCO2,pCO2_atmos,temp,wind)
-		stepdata$DIC<-eval_DIC(mixed_DIC,dNO3,mixed_pCO2,pCO2_atmos,temp,slDOC,depth=COLUMN_DEPTH,wind)
-		stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
-		stepdata$BML_DIC<-stepdata$DIC
-		stepdata$BML_NO3<-mixed_NO3			
-			
-			
-			
-	} else {
-		stepdata$slDOC<-eval_slDOC(dNO3, slDOC)
-		stepdata$slDON<-eval_slDON(dNO3, slDON)
-		stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-		stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth=COLUMN_DEPTH,wind)
-		stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
-		stepdata$BML_DIC<-stepdata$DIC
-		stepdata$BML_NO3<-BML_NO3
+		DIC<-calc_mix(DIC,BML_DIC)
+		NO3<-calc_mix(0,BML_NO3)
+		slDON<-calc_mix(slDON,0)
+		slDOC<-calc_mix(slDOC,0)
+		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6)$pCO2[1]
+	}	
+	
+	stepdata$slDOC<-eval_slDOC(dNO3, slDOC)
+	stepdata$slDON<-eval_slDON(dNO3, slDON)
+	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
+	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth,wind)
+	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
+	if(MODE==2){
+		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(dNO3, BML_DIC),stepdata$DIC)
+		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(dNO3, BML_NO3),ifelse(timestep==mix_day,NO3,BML_NO3))	
 	}
+
 
 	print(stepdata$DIC)
 	as.data.frame(as.list(stepdata))
@@ -201,8 +191,11 @@ eval_timestep<-function(timestep,current_state){
 model_run<-function(run_name){
 
 	timestep = 1
-	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,BML_DIC=init_DIC, BML_NO3=WINTER_NITRATE)
-
+	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0)
+	if(MODE==2){
+		model_output$BML_DIC=init_DIC
+		model_output$BML_NO3=WINTER_NITRATE
+	}
 	
 	while(timestep<run_length){
 		current_state<-model_output[timestep,]

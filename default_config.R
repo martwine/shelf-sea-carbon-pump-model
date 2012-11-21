@@ -8,7 +8,7 @@ RUN_NAME<-"DEFAULT"
 ## mode can be 1-box (surface) or 2-vertical boxes (surface and 
 ## depth), which are mixed for the winter
 
-#mode=1
+#MODE=1
 MODE=2
 
 
