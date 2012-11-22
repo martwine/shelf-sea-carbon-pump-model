@@ -5,16 +5,15 @@
 ###########################################################################################
 
 
-
+source("core_model.R")
 run_name<-commandArgs(trailingOnly=TRUE)
 
 #overwrite default config values with run file
 config_file=paste(run_name,".R",sep="")
 
-source("default_config.R")
+
 source(paste("configs/",config_file,sep=""))
 
-source("core_model.R")
 
 #run the model
 model<-model_run()
@@ -25,7 +24,7 @@ print(cumsum(model$airseaFlux))
 dir.create(paste("results/",run_name,sep=""))
 
 # write output
-write.csv(model,file=paste(out_dir,"/",run_name,"/",run_name,".csv",sep=""))
+write.csv(model,file=paste(out_dir,"/",run_name,".csv",sep=""))
 
 #move config
 file.copy(paste("configs/",config_file,sep=""),paste(out_dir,"/",run_name,"/",config_file,sep=""),overwrite=TRUE)
