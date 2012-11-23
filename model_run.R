@@ -24,7 +24,7 @@ print(cumsum(model$airseaFlux))
 dir.create(paste("results/",run_name,sep=""))
 
 # write output
-write.csv(model,file=paste(out_dir,"/",run_name,".csv",sep=""))
+write.csv(model,file=paste(out_dir,"/",run_name,"/",run_name,".csv",sep=""))
 
 #move config
 file.copy(paste("configs/",config_file,sep=""),paste(out_dir,"/",run_name,"/",config_file,sep=""),overwrite=TRUE)

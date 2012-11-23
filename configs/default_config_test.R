@@ -3,7 +3,7 @@
 #################################################################
 
 
-RUN_NAME<-"slDON_prod_ref_run"
+RUN_NAME<-"default_config_test"
 
 out_dir<-"results"
 
@@ -68,7 +68,7 @@ delta_pCO2<-0
 NH4_turnover<-0.25 #uM day-1
 
 # fraction of summer recycled production which produces TEPC
-TEP_fraction<-0.2 
+TEP_fraction<-0.2
 
 redfield<-6.6 #C:N for 'Redfieldian' processes
 
@@ -78,11 +78,18 @@ slDOM_C_TO_N<-redfield
 ## Proportion of spring bloom N turned into semi-labile DON
 nitrate_to_slDON_conv<-0.5
 
-# degradation rate of sl_DON
+# degradation rate of sl_DON in SML
 slDON_deg<-0.02 #day-1
 
-#degradation rate of sl_DOC
+#degradation rate of sl_DOC in SML
 slDOC_deg<-0.01 #day-1
 
+#degradation rate of PON in BML
+### need to find realistic values of these
+
+PONdeg<-0.02 #day-1
+POCdeg<-0.01 #day-1
+
+TEPdeg<-0.005 #day-1
 
 
