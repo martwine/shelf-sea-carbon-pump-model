@@ -52,7 +52,7 @@ calc_POC_flux<-function(dNO3){
 
 
 
-#calculate TEPC production during summer period
+#calculate  production during summer period
 calc_TEPC_prod<-function(timestep){
 	if(timestep > (BLOOM_START_DAY+BLOOM_DURATION) && timestep < mix_day){
 		NH4_turnover*redfield*TEP_fraction	
