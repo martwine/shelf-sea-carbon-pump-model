@@ -3,7 +3,7 @@
 #################################################################
 
 
-RUN_NAME<-"default_config_test"
+RUN_NAME<-"default_config"
 
 out_dir<-"results"
 

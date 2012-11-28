@@ -86,8 +86,9 @@ eval_slDOC<-function(dNO3, slDOC){
 	slDOC+calc_prod_slDOC(dNO3)-calc_slDOC_deg(slDOC)
 }
 
-eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth,wind,timestep){
-	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC)-calc_TEPC_prod(timestep)
+eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,POC,TEPC,depth,wind,timestep){
+	remin_stuff<-ifelse(depth==SMLD,0,calc_POC_deg(POC)+calc_TEPC_deg(TEPC))
+	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC)-calc_TEPC_prod(timestep)+remin_stuff
 }
 
 eval_PON<-function(PON,dNO3){
@@ -116,7 +117,7 @@ eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
 	} else if (depth==SMLD) {
 		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC*1000*BMLD)
 	} else {
-		(DIC*1000 + slDOC*1000 + TEPC*1000 + POC*1000) *COLUMN_DEPTH
+		(DIC*1000 + slDOC*1000 + TEPC*1000 + POC*1000) *depth
 	}
 }
 
@@ -138,6 +139,7 @@ eval_timestep<-function(timestep,current_state){
 	slDOC<-current_state$slDOC
 	slDON<-current_state$slDON
 	pCO2<-current_state$pCO2
+	
 	# just get BML ones for the 2-box model
 	if (MODE==2){
 		TEPC<-current_state$TEPC
@@ -168,23 +170,24 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC)
 	stepdata$slDON<-eval_slDON(dNO3, slDON)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,depth,wind,timestep)
+	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,POC,TEPC,depth,wind,timestep)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
-	stepdata$deltapCO2<-pCO2_atmos-pCO2
+	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	if(MODE==2){
 		stepdata$TEPC<-eval_TEPC(TEPC,timestep)
 		stepdata$PON<-eval_PON(PON,dNO3)
 		stepdata$POC<-eval_POC(POC,dNO3)
 		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC),stepdata$DIC)
 		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON),ifelse(timestep==mix_day,NO3,BML_NO3))	
-		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,slDOC,TEPC,POC)
+		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
 	} else {
-		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,slDOC,TEPC,POC)
+		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
 	}
 
-	
-	print(paste("BML_DIC",stepdata$BML_DIC))	
-	
+	print(depth)
+	print(paste("total_C_change",stepdata$total_C-current_state$total_C))	
+	print(paste("air-sea flux",stepdata$airseaFlux))	
+	print(stepdata$POC)
 	as.data.frame(as.list(stepdata))
 }
 
@@ -196,18 +199,22 @@ eval_timestep<-function(timestep,current_state){
 model_run<-function(){
 	source("initialise_model.R")
 	timestep = 1
-	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,total_C=-999,TEPC=0,PON=0,POC=0)
+	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0)
+	
 	if(MODE==2){
 		model_output$BML_DIC=init_DIC
 		model_output$BML_NO3=WINTER_NITRATE
+		
 	}
-	
+	model_output$total_C=eval_C_inventory(depth=COLUMN_DEPTH,init_DIC,init_DIC,0,0,0)
+	print(model_output)	
 	while(timestep<run_length){
 		current_state<-model_output[timestep,]
 		model_output<-rbind(model_output,eval_timestep(timestep,current_state))
 		timestep=timestep+1
 	}
 	model<-cbind(box,model_output)
+	
 
 	model	
 }
