@@ -14,6 +14,9 @@ library("seacarb")
 
 	surface_temp<-c(surface_temp_cycle[(365-OFFSET):365],surface_temp_cycle[1:(365-OFFSET-1)])
 
+	bottom_temp_cycle<-MIN_BOTTOM_TEMP+(0.5*(MAX_BOTTOM_TEMP-MIN_BOTTOM_TEMP))*(1+sin((seq(from=-90,to=270,length.out=365)*pi)/180))
+
+	bottom_temp<-c(bottom_temp_cycle[(365-OFFSET):365],bottom_temp_cycle[1:(365-OFFSET-1)])
 
 
 	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
@@ -50,6 +53,7 @@ library("seacarb")
 	colnames(box)<-c("day","nitrate")
 	box$pCO2_atmos<-c(pCO2_atmos,pCO2_atmos)[1:run_length]
 	box$temp<-c(surface_temp,surface_temp)[1:run_length]
+	box$bottomtemp<-c(bottom_temp,bottom_temp)[1:run_length]
 	box$wind<-c(wind_speed,wind_speed)[1:run_length]
 	
 	#delta nitrate column - gives change between each timestep and previous
