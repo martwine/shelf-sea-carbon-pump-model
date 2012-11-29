@@ -1,4 +1,4 @@
-#################################################################
+bg#################################################################
 ### DEFAULT CONFIG FILE FOR Shelf Sea Biogeochemistry  model ####
 #################################################################
 
@@ -32,6 +32,9 @@ COLUMN_DEPTH<-100
 
 MIN_SURFACE_TEMP<-4
 MAX_SURFACE_TEMP<-16
+
+MIN_BOTTOM_TEMP<-2
+MAX_BOTTOM_TEMP<-8
 
 OFFSET<-59 # days to 1st March (temperature min date)
 
@@ -91,5 +94,12 @@ PONdeg<-0.02 #day-1
 POCdeg<-0.01 #day-1
 
 TEPdeg<-0.005 #day-1
+
+
+#"Q10" values for degradations
+Q10_REF_TEMP<-15 #celcius
+
+Q10<-2.5
+
 
 

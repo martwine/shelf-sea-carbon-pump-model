@@ -22,13 +22,13 @@ calc_DIC_uptake_from_NO3<-function(dNO3){
 	-dNO3*redfield
 }
 
-calc_slDON_deg<-function(slDON){
-	slDON*slDON_deg
+calc_slDON_deg<-function(slDON,temp){
+	slDON*slDON_deg*Q10_rate_scale(temp)
 }
 
 
-calc_slDOC_deg<-function(slDOC){
-	slDOC*slDOC_deg
+calc_slDOC_deg<-function(slDOC,temp){
+	slDOC*slDOC_deg*Q10_rate_scale(temp)
 }
 
 calc_prod_slDON<-function(dNO3){
@@ -50,6 +50,9 @@ calc_POC_flux<-function(dNO3){
 
 
 
+Q10_rate_scale<-function(temp){
+	Q10^((temp-Q10_REF_TEMP)/10)
+}
 
 
 #calculate  production during summer period
@@ -62,20 +65,20 @@ calc_TEPC_prod<-function(timestep){
 }
 
 
-calc_TEPC_deg<-function(TEPC){
-	TEPC*TEPdeg	
+calc_TEPC_deg<-function(TEPC,temp){
+	TEPC*TEPdeg*Q10_rate_scale(temp)	
 }
 
 eval_TEPC<-function(TEPC,timestep){
 	TEPC+(calc_TEPC_prod(timestep)*SMLD/BMLD)-calc_TEPC_deg(TEPC)	
 }
 
-calc_PON_deg<-function(PON){
-	PON*PONdeg
+calc_PON_deg<-function(PON,temp){
+	PON*PONdeg*Q10_rate_scale(temp)
 }
 
-calc_POC_deg<-function(POC){
-	POC*POCdeg
+calc_POC_deg<-function(POC,temp){
+	POC*POCdeg*Q10_rate_scale(temp)
 }
 
 eval_slDON<-function(dNO3, slDON){
