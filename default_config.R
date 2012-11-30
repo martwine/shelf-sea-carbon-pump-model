@@ -99,7 +99,7 @@ TEPdeg<-0.005 #day-1
 #"Q10" values for degradations
 Q10_REF_TEMP<-15 #celcius
 
-Q10<-2.5
+Q10<-1
 
 
 

@@ -102,11 +102,11 @@ eval_POC<-function(POC,dNO3,temp){
 	POC+calc_POC_flux(dNO3)-calc_POC_deg(POC,temp)
 }
 
-eval_BML_DIC<-function(BML_DIC, POC, TEPC){
+eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp){
 	BML_DIC+calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp)
 }
 
-eval_BML_NO3<-function(BML_NO3,PON){
+eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
 	BML_NO3+calc_PON_deg(PON,bottomtemp)
 }
 
@@ -165,7 +165,7 @@ eval_timestep<-function(timestep,current_state){
 		NO3<-calc_mix(0,BML_NO3)
 		slDON<-calc_mix(slDON,0)
 		slDOC<-calc_mix(slDOC,0)
-		pCO2<-carb(flag=15,init_TA*deg1e-6,DIC*1e-6)$pCO2[1]
+		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6)$pCO2[1]
 		PON<-calc_mix(0,PON)
 		POC<-calc_mix(0,POC)
 		TEPC<-calc_mix(0,TEPC)
@@ -181,8 +181,8 @@ eval_timestep<-function(timestep,current_state){
 		stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
 		stepdata$PON<-eval_PON(PON,dNO3,bottomtemp)
 		stepdata$POC<-eval_POC(POC,dNO3,bottomtemp)
-		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC),stepdata$DIC)
-		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON),ifelse(timestep==mix_day,NO3,BML_NO3))	
+		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp),stepdata$DIC)
+		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON,bottomtemp),ifelse(timestep==mix_day,NO3,BML_NO3))	
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
 	} else {
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
