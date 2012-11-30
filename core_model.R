@@ -69,8 +69,8 @@ calc_TEPC_deg<-function(TEPC,temp){
 	TEPC*TEPdeg*Q10_rate_scale(temp)	
 }
 
-eval_TEPC<-function(TEPC,timestep){
-	TEPC+(calc_TEPC_prod(timestep)*SMLD/BMLD)-calc_TEPC_deg(TEPC)	
+eval_TEPC<-function(TEPC,temp,timestep){
+	TEPC+(calc_TEPC_prod(timestep)*SMLD/BMLD)-calc_TEPC_deg(TEPC,temp)	
 }
 
 calc_PON_deg<-function(PON,temp){
@@ -81,33 +81,33 @@ calc_POC_deg<-function(POC,temp){
 	POC*POCdeg*Q10_rate_scale(temp)
 }
 
-eval_slDON<-function(dNO3, slDON){
-	slDON+calc_prod_slDON(dNO3)-calc_slDON_deg(slDON)
+eval_slDON<-function(dNO3, slDON,temp){
+	slDON+calc_prod_slDON(dNO3)-calc_slDON_deg(slDON,temp)
 }
 
-eval_slDOC<-function(dNO3, slDOC){
-	slDOC+calc_prod_slDOC(dNO3)-calc_slDOC_deg(slDOC)
+eval_slDOC<-function(dNO3, slDOC, temp){
+	slDOC+calc_prod_slDOC(dNO3)-calc_slDOC_deg(slDOC,temp)
 }
 
-eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,POC,TEPC,depth,wind,timestep){
-	remin_stuff<-ifelse(depth==SMLD,0,calc_POC_deg(POC)+calc_TEPC_deg(TEPC))
-	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC)-calc_TEPC_prod(timestep)+remin_stuff
+eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep){
+	remin_stuff<-ifelse(depth==SMLD,0,calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp))
+	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff
 }
 
-eval_PON<-function(PON,dNO3){
-	PON+calc_PON_flux(dNO3)-calc_PON_deg(PON)
+eval_PON<-function(PON,dNO3,temp){
+	PON+calc_PON_flux(dNO3)-calc_PON_deg(PON,temp)
 }
 
-eval_POC<-function(POC,dNO3){
-	POC+calc_POC_flux(dNO3)-calc_POC_deg(POC)
+eval_POC<-function(POC,dNO3,temp){
+	POC+calc_POC_flux(dNO3)-calc_POC_deg(POC,temp)
 }
 
 eval_BML_DIC<-function(BML_DIC, POC, TEPC){
-	BML_DIC+calc_POC_deg(POC)+calc_TEPC_deg(TEPC)
+	BML_DIC+calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp)
 }
 
 eval_BML_NO3<-function(BML_NO3,PON){
-	BML_NO3+calc_PON_deg(PON)
+	BML_NO3+calc_PON_deg(PON,bottomtemp)
 }
 
 calc_mix<-function(sml_conc,bml_conc){
@@ -135,6 +135,7 @@ eval_timestep<-function(timestep,current_state){
 	pCO2_atmos<-timestep_row$pCO2_atmos
 	dNO3<-timestep_row$dNO3
 	temp<-timestep_row$temp
+	bottomtemp<-timestep_row$bottomtemp
 	wind<-timestep_row$wind
 
 	# get the current state of the model at the end of the previous timestep
@@ -164,22 +165,22 @@ eval_timestep<-function(timestep,current_state){
 		NO3<-calc_mix(0,BML_NO3)
 		slDON<-calc_mix(slDON,0)
 		slDOC<-calc_mix(slDOC,0)
-		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6)$pCO2[1]
+		pCO2<-carb(flag=15,init_TA*deg1e-6,DIC*1e-6)$pCO2[1]
 		PON<-calc_mix(0,PON)
 		POC<-calc_mix(0,POC)
 		TEPC<-calc_mix(0,TEPC)
 	}	
 	
-	stepdata$slDOC<-eval_slDOC(dNO3, slDOC)
-	stepdata$slDON<-eval_slDON(dNO3, slDON)
+	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
+	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,slDOC,POC,TEPC,depth,wind,timestep)
+	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	if(MODE==2){
-		stepdata$TEPC<-eval_TEPC(TEPC,timestep)
-		stepdata$PON<-eval_PON(PON,dNO3)
-		stepdata$POC<-eval_POC(POC,dNO3)
+		stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
+		stepdata$PON<-eval_PON(PON,dNO3,bottomtemp)
+		stepdata$POC<-eval_POC(POC,dNO3,bottomtemp)
 		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC),stepdata$DIC)
 		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON),ifelse(timestep==mix_day,NO3,BML_NO3))	
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
