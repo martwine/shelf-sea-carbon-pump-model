@@ -107,10 +107,30 @@ for(i in 1:nrow(run_matrix)) {
 		)	
 }
 
+#write run_scripts
 
+#split data frame into sets of 100 runs
+n<-seq(from=1,to=nrow(run_matrix)/100)
 
+print(n)
+filecounter=1
+for(chunk in n){
+	textout<-c(	"#!/bin/bash\n",
+			"#BSUB -q short\n",
+			paste("#BSUB -J",filecounter,"\n"),
+			paste("#BSUB -oo",experiment_name,"-%J.out\n", sep=""),
+			paste("#BSUB -eo",experiment_name,"-%J.err\n", sep=""),
+			". /etc/profile\n",
+			"module add R\n")
+	chunklist<-seq(from=1,to=100)+((filecounter-1)*100)	
+	for(run in chunklist){
+		textout<-c(textout,paste("Rscript experiment_run.R experiments/",out_dir,"/",experiment_name,"_",run,".R ",experiment_name,"\n",sep="") )
+		counter=counter+1
+	}
+	cat(textout,file=paste(experiment_name,"_set_",filecounter,".sh",sep=""),append=FALSE)
 
-
+	filecounter=filecounter+1
+}
 
 
 
