@@ -26,7 +26,10 @@ vars<-vars[-which(vars=="out_dir")]
 
 #reload to get out_dir back
 
-experiment_name<-commandArgs(trailingOnly=TRUE)
+experiment_name<-commandArgs(trailingOnly=TRUE)[1]
+max_runs<-as.integer(commandArgs(trailingOnly=TRUE)[2])
+chunk_size<-as.integer(commandArgs(trailingOnly=TRUE)[3])
+print(chunk_size)
 source(paste("configs/",config_file,sep=""))
 
 
@@ -50,7 +53,6 @@ changingvarlist<-lapply(changingvars,get)
 names(changingvarlist)<-changingvars
 
 #how many runs and variable values?
-max_runs<-400
 n_vals<-10 #number of values for each variable
 
 
@@ -109,8 +111,8 @@ for(i in 1:nrow(run_matrix)) {
 
 #write run_scripts
 
-#split data frame into sets of 100 runs
-n<-seq(from=1,to=nrow(run_matrix)/100)
+#split data frame into sets of chunk size runs
+n<-seq(from=1,to=nrow(run_matrix)/chunk_size)
 
 print(n)
 filecounter=1
@@ -122,7 +124,7 @@ for(chunk in n){
 			paste("#BSUB -eo",experiment_name,"-%J.err\n", sep=""),
 			". /etc/profile\n",
 			"module add R\n")
-	chunklist<-seq(from=1,to=100)+((filecounter-1)*100)	
+	chunklist<-seq(from=1,to=chunk_size)+((filecounter-1)*chunk_size)	
 	for(run in chunklist){
 		textout<-c(textout,paste("Rscript experiment_run.R experiments/",out_dir,"/",experiment_name,"_",run,".R ",experiment_name,"\n",sep="") )
 		counter=counter+1
