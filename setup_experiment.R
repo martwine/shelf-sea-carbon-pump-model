@@ -53,16 +53,22 @@ changingvarlist<-lapply(changingvars,get)
 names(changingvarlist)<-changingvars
 
 #how many runs and variable values?
-n_vals<-10 #number of values for each variable
+# if 3 values for variable in config file, this specifies min, max and dsitrbution (log vs linear)
+# if any other number of variables, each value is used in the lhc (needs to match n_vals)
+n_vals<-10 #number of values for each variable where specific values not set
 
 
 cvars<-new.env()
 counter=1
 for(variable in changingvarlist){
 	varname<-changingvars[counter]
-	if(variable[3]==1) #logarthmic distribution case
-		{cvars[[varname]]<-exp(seq(from=log(variable[1]), to=log(variable[2]), length.out=n_vals))}
-	else {cvars[[varname]]<-seq(from=variable[1],to=variable[2],length.out=n_vals)}
+	if(length(variable)==3) # min, max and dist_type specified
+		{if(variable[3]==1) #logarthmic distribution case
+			{cvars[[varname]]<-exp(seq(from=log(variable[1]), to=log(variable[2]), length.out=n_vals))}
+		else {cvars[[varname]]<-seq(from=variable[1],to=variable[2],length.out=n_vals)}
+	} else #take each values specified
+		{cvars[[varname]]<-variable
+	}
 	counter<-counter+1
 }
 
