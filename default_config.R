@@ -84,14 +84,14 @@ nitrate_to_slDON_conv<-0.5
 # degradation rate of sl_DON in SML
 slDON_deg<-0.02 #day-1
 
-#degradation rate of sl_DOC in SML
-slDOC_deg<-0.01 #day-1
+#degradation rate of sl_DOC in SML as proportion of DON degradation
+slDOC_deg_factor<-0.5
 
 #degradation rate of PON in BML
 ### need to find realistic values of these
 
 PONdeg<-0.02 #day-1
-POCdeg<-0.01 #day-1
+POCdeg_factor<-0.5 
 
 TEPdeg<-0.005 #day-1
 
