@@ -1,9 +1,10 @@
+
 #############################################################
 ####### analyse data from lhc experiment ####################
 #############################################################
 
-experiment_name="test_experiment"
-experiment_nruns=10
+experiment_name=commandArgs(trailingOnly=TRUE)[1]
+experiment_nruns=commandArgs(trailingOnly=TRUE)[2]
 experiment_path=paste("experiments/",experiment_name,"/",sep="")
 
 
