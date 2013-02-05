@@ -1,5 +1,8 @@
 #initalise model
 
+
+#for MODE==1 surface and bottom temp params should be equal and SMLD and COLUMN_DEPTH should be equal too
+
 source("eval_CO2_sys.R")
 library("seacarb")
 source("K_calcs_Johnson_OS.R")
@@ -39,12 +42,12 @@ calc_prod_slDOC<-function(dNO3){
 	calc_prod_slDON(dNO3)*slDOM_C_TO_N
 }
 
-calc_PON_flux<-function(dNO3){
-	-dNO3*(1-nitrate_to_slDON_conv)*SMLD/BMLD
+calc_PON_flux<-function(dNO3,...){
+	-dNO3*(1-nitrate_to_slDON_conv)*ifelse(MODE==2,SMLD/BMLD,1)
 }
 
-calc_POC_flux<-function(dNO3){
-	((-dNO3*redfield)-calc_prod_slDOC(dNO3))*SMLD/BMLD
+calc_POC_flux<-function(dNO3,...){
+	((-dNO3*redfield)-calc_prod_slDOC(dNO3))*ifelse(MODE==2,SMLD/BMLD,1)
 }
 
 
@@ -69,8 +72,8 @@ calc_TEPC_deg<-function(TEPC,temp){
 	TEPC*TEPdeg*Q10_rate_scale(temp)	
 }
 
-eval_TEPC<-function(TEPC,temp,timestep){
-	TEPC+(calc_TEPC_prod(timestep)*SMLD/BMLD)-calc_TEPC_deg(TEPC,temp)	
+eval_TEPC<-function(TEPC,temp,timestep,..){
+	TEPC+(calc_TEPC_prod(timestep)*ifelse(MODE==2,SMLD/BMLD,1))-calc_TEPC_deg(TEPC,temp)	
 }
 
 calc_PON_deg<-function(PON,temp){
@@ -89,8 +92,8 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 	slDOC+calc_prod_slDOC(dNO3)-calc_slDOC_deg(slDOC,temp)
 }
 
-eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep){
-	remin_stuff<-ifelse(depth==SMLD,0,calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp))
+eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,...){
+	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp))
 	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff
 }
 
@@ -115,9 +118,7 @@ calc_mix<-function(sml_conc,bml_conc){
 }
 
 eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
-	if(depth==SMLD && MODE==1){
-		DIC*1000*SMLD
-	} else if (depth==SMLD) {
+	if(depth==SMLD&&MODE==2) {
 		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC*1000*BMLD)
 	} else {
 		(DIC*1000 + slDOC*1000 + TEPC*1000 + POC*1000) *depth
@@ -143,12 +144,12 @@ eval_timestep<-function(timestep,current_state){
 	slDOC<-current_state$slDOC
 	slDON<-current_state$slDON
 	pCO2<-current_state$pCO2
-	
+	TEPC<-current_state$TEPC
+	POC<-current_state$POC
+	PON<-current_state$PON	
+
 	# just get BML ones for the 2-box model
 	if (MODE==2){
-		TEPC<-current_state$TEPC
-		POC<-current_state$POC
-		PON<-current_state$PON
 		BML_DIC<-current_state$BML_DIC
 		BML_NO3<-current_state$BML_NO3
 	}
@@ -177,10 +178,12 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
+	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
+	stepdata$PON<-eval_PON(PON,dNO3,bottomtemp)
+	stepdata$POC<-eval_POC(POC,dNO3,bottomtemp)
+
 	if(MODE==2){
-		stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
-		stepdata$PON<-eval_PON(PON,dNO3,bottomtemp)
-		stepdata$POC<-eval_POC(POC,dNO3,bottomtemp)
+
 		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp),stepdata$DIC)
 		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON,bottomtemp),ifelse(timestep==mix_day,NO3,BML_NO3))	
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
