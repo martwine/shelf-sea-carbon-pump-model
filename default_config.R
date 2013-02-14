@@ -67,6 +67,7 @@ delta_pCO2<-0
 ######## PARAMETER VALUES ########
 ##################################
 
+
 # ammonium turnover rate
 NH4_turnover<-0.25 #uM day-1
 

@@ -199,7 +199,6 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
 	stepdata$PON<-eval_PON(PON,dNO3,bottomtemp,stepdata$remin_overconsumption)
 	stepdata$POC<-eval_POC(POC,dNO3,bottomtemp,stepdata$remin_overconsumption)
-	stepdata$total_overconsumption<-redfieldian_DIC-DIC
 	print("overcon:")
 	print(stepdata$remin_overconsumption)
 	if(MODE==2){
