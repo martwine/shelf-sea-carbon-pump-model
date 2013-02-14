@@ -5,6 +5,13 @@ library("seacarb")
 ################################################################################################
 ###############   Initialisation ########################################################
 
+	#if mode is 1, set SMLD to COLUMN_DEPTH and bottom temps to top temps
+	if(MODE==1)
+		{
+			SMLD<-COLUMN_DEPTH
+			MIN_BOTTOM_TEMP<-MIN_SURFACE_TEMP
+			MAX_BOTTOM_TEMP<-MAX_SURFACE_TEMP
+		}
 	#calc bottom mixed layer depth
 	BMLD<-COLUMN_DEPTH-SMLD
 
