@@ -50,6 +50,10 @@ library("seacarb")
 	slDOC_deg<-slDOC_deg_factor*slDON_deg
 	POCdeg<-POCdeg_factor*PONdeg
 
+	#calculate predicted redfieldian drawdown from winter nitrate
+	redfieldian_consumption<-WINTER_NITRATE*redfield
+	redfieldian_DIC<-init_DIC-redfieldian_consumption
+
 
 	#initalise_data
 	box<-as.data.frame(nitrate)
