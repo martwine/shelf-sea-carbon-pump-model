@@ -19,6 +19,7 @@ source(paste("configs/",config_file,sep=""))
 model<-model_run()
 
 print(cumsum(model$airseaFlux))
+print(warnings())
 
 #create a run directory
 dir.create(paste("results/",run_name,sep=""))

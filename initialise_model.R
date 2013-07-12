@@ -5,6 +5,11 @@ library("seacarb")
 ################################################################################################
 ###############   Initialisation ########################################################
 
+	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
+	#run_length=3650
+	run_length=365+BLOOM_START_DAY
+	#run_length=20
+
 	#if mode is 1, set SMLD to COLUMN_DEPTH and bottom temps to top temps
 	if(MODE==1)
 		{
@@ -26,8 +31,6 @@ library("seacarb")
 	bottom_temp<-c(bottom_temp_cycle[(365-OFFSET):365],bottom_temp_cycle[1:(365-OFFSET-1)])
 
 
-	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
-	run_length=365+BLOOM_START_DAY
 
 
 	#calc jday of mixing event
@@ -43,11 +46,11 @@ library("seacarb")
 	min_pCO2<-AVERAGE_pCO2-(AMPLITUDE/2)
 	pCO2_atmos<-(min_pCO2+(AMPLITUDE/2)*(1+cos((seq(from=0,to=360,length.out=365)*pi)/180)))
 	
-	init_pCO2<-min_pCO2+AMPLITUDE
+	init_pCO2<-min_pCO2+AMPLITUDE-delta_pCO2
 
 
 	#initalise DIC from pCO2 and estimated TA 
-	init_DIC<-1e6*carb(flag=24,(init_pCO2-delta_pCO2),init_TA*1e-6)$DIC[1]
+	init_DIC<-1e6*carb(flag=24,init_pCO2,init_TA*1e-6,T=surface_temp[1])$DIC[1]
 	print(paste("init DIC:", init_DIC))
 	
 	#wind speed cycle
@@ -62,10 +65,10 @@ library("seacarb")
 	#initalise_data
 	box<-as.data.frame(nitrate)
 	colnames(box)<-c("day","nitrate")
-	box$pCO2_atmos<-c(pCO2_atmos,pCO2_atmos)[1:run_length]
-	box$temp<-c(surface_temp,surface_temp)[1:run_length]
-	box$bottomtemp<-c(bottom_temp,bottom_temp)[1:run_length]
-	box$wind<-c(wind_speed,wind_speed)[1:run_length]
+	box$pCO2_atmos<-c(pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos,pCO2_atmos)[1:run_length]
+	box$temp<-c(surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp,surface_temp)[1:run_length]
+	box$bottomtemp<-c(bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp,bottom_temp)[1:run_length]
+	box$wind<-c(wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed,wind_speed)[1:run_length]
 	
 	#delta nitrate column - gives change between each timestep and previous
 	box$dNO3<-c(0,diff(box$nitrate))

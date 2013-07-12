@@ -184,7 +184,7 @@ eval_timestep<-function(timestep,current_state){
 		NO3<-calc_mix(0,BML_NO3)
 		slDON<-calc_mix(slDON,0)
 		slDOC<-calc_mix(slDOC,0)
-		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6)$pCO2[1]
+		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6,T=temp)$pCO2[1]
 		PON<-calc_mix(0,PON)
 		POC<-calc_mix(0,POC)
 		TEPC<-calc_mix(0,TEPC)
@@ -194,7 +194,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
 	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,stepdata$remin_overconsumption)
-	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
+	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6,T=temp)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
 	stepdata$PON<-eval_PON(PON,dNO3,bottomtemp,stepdata$remin_overconsumption)
@@ -225,7 +225,7 @@ eval_timestep<-function(timestep,current_state){
 model_run<-function(){
 	source("initialise_model.R")
 	timestep = 1
-	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0,remin_overconsumption=0,total_overconsumption=0)
+	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0,remin_overconsumption=0)
 	
 	if(MODE==2){
 		model_output$BML_DIC=init_DIC
