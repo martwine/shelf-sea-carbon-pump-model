@@ -15,6 +15,18 @@ library("seacarb")
 	#calc bottom mixed layer depth
 	BMLD<-COLUMN_DEPTH-SMLD
 
+
+
+
+	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
+	#run_length=365+BLOOM_START_DAY
+
+	#multiyear run
+	run_length=365*2
+
+	#get number of repeats of each of the annual forcings
+	n_repeats=1+(run_length/365)
+
 	#Temperature cycle calculated from max and min values (1st March min, 1st September max)
 
 	surface_temp_cycle<-MIN_SURFACE_TEMP+(0.5*(MAX_SURFACE_TEMP-MIN_SURFACE_TEMP))*(1+sin((seq(from=-90,to=270,length.out=365)*pi)/180))
@@ -26,18 +38,16 @@ library("seacarb")
 	bottom_temp<-c(bottom_temp_cycle[(365-OFFSET):365],bottom_temp_cycle[1:(365-OFFSET-1)])
 
 
-	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
-	run_length=365+BLOOM_START_DAY
-
 
 	#calc jday of mixing event
 	mix_day<-BLOOM_START_DAY+BLOOM_DURATION+SUMMER_LENGTH
 
 	#define surface nitrate 'envelope'
-	nday<-c(1,BLOOM_START_DAY,BLOOM_START_DAY+BLOOM_DURATION,run_length)
+	#nday<-c(1,BLOOM_START_DAY,BLOOM_START_DAY+BLOOM_DURATION,run_length)
+	nday<-c(1,BLOOM_START_DAY,BLOOM_START_DAY+BLOOM_DURATION,365)
 	nitrate<-c(WINTER_NITRATE,WINTER_NITRATE,0,0)
-	nitrate<-approx(nday,nitrate,n=run_length)
-
+	nitrate<-approx(nday,nitrate,n=365)
+	nitrate_cycle<-rep(nitrate$y,times=n_repeats)[1:run_length]
 
 	#get a simple seasonal cycle of atmospheric CO2
 	min_pCO2<-AVERAGE_pCO2-(AMPLITUDE/2)
@@ -60,12 +70,14 @@ library("seacarb")
 
 
 	#initalise_data
-	box<-as.data.frame(nitrate)
+	box<-data.frame(seq(run_length),nitrate_cycle)
 	colnames(box)<-c("day","nitrate")
-	box$pCO2_atmos<-c(pCO2_atmos,pCO2_atmos)[1:run_length]
-	box$temp<-c(surface_temp,surface_temp)[1:run_length]
-	box$bottomtemp<-c(bottom_temp,bottom_temp)[1:run_length]
-	box$wind<-c(wind_speed,wind_speed)[1:run_length]
+	box$pCO2_atmos<-rep(pCO2_atmos,times=n_repeats)[1:run_length]
+	box$temp<-rep(surface_temp,times=n_repeats)[1:run_length]
+	box$bottomtemp<-rep(bottom_temp,times=n_repeats)[1:run_length]
+	box$wind<-rep(wind_speed,times=n_repeats)[1:run_length]
 	
 	#delta nitrate column - gives change between each timestep and previous
-	box$dNO3<-c(0,diff(box$nitrate))
+	box$dNO3<-c(0,ifelse(diff(box$nitrate)<0,diff(box$nitrate),0))
+
+

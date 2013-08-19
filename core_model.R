@@ -178,7 +178,7 @@ eval_timestep<-function(timestep,current_state){
 		depth<-ifelse(timestep >= BLOOM_START_DAY && timestep < mix_day,SMLD,COLUMN_DEPTH)
 	} else {depth=SMLD}
 
-	if(MODE==2 && timestep==mix_day){
+	if(MODE==2 && (timestep-mix_day)%%365==0){
 		#do the mixing
 		DIC<-calc_mix(DIC,BML_DIC)
 		NO3<-calc_mix(0,BML_NO3)
@@ -213,7 +213,8 @@ eval_timestep<-function(timestep,current_state){
 	print(depth)
 	print(paste("total_C_change",stepdata$total_C-current_state$total_C))	
 	print(paste("air-sea flux",stepdata$airseaFlux))	
-	print(stepdata$POC)
+	print("eeeeep")	
+	print(as.data.frame(as.list(stepdata)))
 	as.data.frame(as.list(stepdata))
 }
 
@@ -225,7 +226,7 @@ eval_timestep<-function(timestep,current_state){
 model_run<-function(){
 	source("initialise_model.R")
 	timestep = 1
-	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0,remin_overconsumption=0,total_overconsumption=0)
+	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0,remin_overconsumption=0)
 	
 	if(MODE==2){
 		model_output$BML_DIC=init_DIC
