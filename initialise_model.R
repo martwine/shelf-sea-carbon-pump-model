@@ -5,6 +5,11 @@ library("seacarb")
 ################################################################################################
 ###############   Initialisation ########################################################
 
+	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
+	#run_length=3650
+	run_length=365+BLOOM_START_DAY
+	#run_length=20
+
 	#if mode is 1, set SMLD to COLUMN_DEPTH and bottom temps to top temps
 	if(MODE==1)
 		{
@@ -42,7 +47,6 @@ library("seacarb")
 	bottom_temp<-c(bottom_temp_cycle[(365-OFFSET):365],bottom_temp_cycle[1:(365-OFFSET-1)])
 
 
-
 	#calc jday of mixing event
 	mix_day<-BLOOM_START_DAY+BLOOM_DURATION+SUMMER_LENGTH
 
@@ -57,11 +61,11 @@ library("seacarb")
 	min_pCO2<-AVERAGE_pCO2-(AMPLITUDE/2)
 	pCO2_atmos<-(min_pCO2+(AMPLITUDE/2)*(1+cos((seq(from=0,to=360,length.out=365)*pi)/180)))
 	
-	init_pCO2<-min_pCO2+AMPLITUDE
+	init_pCO2<-min_pCO2+AMPLITUDE-delta_pCO2
 
 
 	#initalise DIC from pCO2 and estimated TA 
-	init_DIC<-1e6*carb(flag=24,(init_pCO2-delta_pCO2),init_TA*1e-6)$DIC[1]
+	init_DIC<-1e6*carb(flag=24,init_pCO2,init_TA*1e-6,T=surface_temp[1])$DIC[1]
 	print(paste("init DIC:", init_DIC))
 	
 	#wind speed cycle
