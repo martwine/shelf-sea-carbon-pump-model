@@ -43,29 +43,37 @@ calc_prod_slDOC<-function(dNO3){
 }
 
 calc_PON_flux<-function(dNO3,overconsumption){
-	(-dNO3*(1-nitrate_to_slDON_conv)+(overconsumption/redfield))*ifelse(MODE==2,SMLD/BMLD,1)
+	conc_change=(-dNO3*(1-nitrate_to_slDON_conv)+(overconsumption/redfield))
+	amount=conc_change*1000*SMLD
+	amount
 }
 
 calc_POC_flux<-function(dNO3,overconsumption){
-	(((-dNO3*redfield)-calc_prod_slDOC(dNO3))+overconsumption)*ifelse(MODE==2,SMLD/BMLD,1)
+	conc_change<-(((-dNO3*redfield)-calc_prod_slDOC(dNO3))+overconsumption)
+	amount<-conc_change*1000*SMLD
+	amount
 }
 
 
 calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,timestep){
 	#organic N that gets remineralised above redfield makes new POC at redfield. Called only in summer
 	#if remineralisation is C rich, return zero (a simplification)
-	if(timestep > (BLOOM_START_DAY+BLOOM_DURATION) && timestep < mix_day){
+	if(timestep > (BLOOM_START_DAY+BLOOM_DURATION) && timestep < mix_day && timestep > 1e6){
 		x<-(calc_slDON_deg(slDON,temp)*redfield)-calc_slDOC_deg(slDOC,temp)
 		slDON_remin_C_fixation<-ifelse(x>0,x,0)
 		
 		if (MODE==2){
-			slDON_remin_C_fixation
+			conc_change<-slDON_remin_C_fixation
+
 			
 		} else {
 			y<-(calc_PON_deg(PON,temp)*redfield)-calc_POC_deg(POC,temp)
 			PON_remin_C_fixation<-ifelse(y>0,y,0)
-			slDON_remin_C_fixation + PON_remin_C_fixation
+			conc_change<-slDON_remin_C_fixation + PON_remin_C_fixation
+
 		}
+		amount=conc_change*1000*SMLD
+		amount
 	} else {0}
 }
 
@@ -110,8 +118,8 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 
 eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
-	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp))
-	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff-overconsumption
+	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC,bottomtemp))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
+	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff-overconsumption/(1000*SMLD)
 }
 
 
@@ -124,11 +132,11 @@ eval_POC<-function(POC,dNO3,temp,overconsumption){
 }
 
 eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp){
-	BML_DIC+calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp)
+	BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
-	BML_NO3+calc_PON_deg(PON,bottomtemp)
+	BML_NO3+calc_PON_deg(PON,bottomtemp)/(1000*BMLD)
 }
 
 calc_mix<-function(sml_conc,bml_conc){
@@ -137,9 +145,9 @@ calc_mix<-function(sml_conc,bml_conc){
 
 eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
 	if(depth==SMLD&&MODE==2) {
-		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC*1000*BMLD)
+		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC)
 	} else {
-		(DIC*1000 + slDOC*1000 + TEPC*1000 + POC*1000) *depth
+		(DIC*1000 + slDOC*1000 + TEPC*1000)*depth + POC
 	}
 }
 
@@ -149,7 +157,7 @@ eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
 
 eval_timestep<-function(timestep,current_state){
 	
-	# get the boundary conditions for the current timestep
+	# get the boundary conditions for the current timestep		
 	timestep_row<-box[timestep,]	
 	pCO2_atmos<-timestep_row$pCO2_atmos
 	dNO3<-timestep_row$dNO3
@@ -186,8 +194,6 @@ eval_timestep<-function(timestep,current_state){
 		slDON<-calc_mix(slDON,0)
 		slDOC<-calc_mix(slDOC,0)
 		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6)$pCO2[1]
-		PON<-calc_mix(0,PON)
-		POC<-calc_mix(0,POC)
 		TEPC<-calc_mix(0,TEPC)
 	}	
 	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,timestep=jday)
@@ -213,6 +219,8 @@ eval_timestep<-function(timestep,current_state){
 	print(paste("total_C_change",stepdata$total_C-current_state$total_C))	
 	print(paste("air-sea flux",stepdata$airseaFlux))		
 	print(paste("TIMESTEP",timestep))
+	print(paste("POC",stepdata$POC))	
+	print(paste("PON",stepdata$PON))		
 	as.data.frame(as.list(stepdata))
 }
 

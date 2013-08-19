@@ -22,7 +22,7 @@ library("seacarb")
 	#run_length=365+BLOOM_START_DAY
 
 	#multiyear run
-	run_length=365*20
+	run_length=365*2
 
 	#make jday term for mixing events etc
 	jday<-rep(seq(365),ceiling(run_length/365))[1:run_length]
