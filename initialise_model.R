@@ -22,10 +22,14 @@ library("seacarb")
 	#run_length=365+BLOOM_START_DAY
 
 	#multiyear run
-	run_length=365*2
+	run_length=365*20
+
+	#make jday term for mixing events etc
+	jday<-rep(seq(365),ceiling(run_length/365))[1:run_length]
+
 
 	#get number of repeats of each of the annual forcings
-	n_repeats=1+(run_length/365)
+	n_repeats=ceiling(run_length/365)
 
 	#Temperature cycle calculated from max and min values (1st March min, 1st September max)
 
@@ -72,6 +76,7 @@ library("seacarb")
 	#initalise_data
 	box<-data.frame(seq(run_length),nitrate_cycle)
 	colnames(box)<-c("day","nitrate")
+	box$jday<-jday
 	box$pCO2_atmos<-rep(pCO2_atmos,times=n_repeats)[1:run_length]
 	box$temp<-rep(surface_temp,times=n_repeats)[1:run_length]
 	box$bottomtemp<-rep(bottom_temp,times=n_repeats)[1:run_length]

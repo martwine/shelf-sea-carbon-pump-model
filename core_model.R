@@ -156,6 +156,7 @@ eval_timestep<-function(timestep,current_state){
 	temp<-timestep_row$temp
 	bottomtemp<-timestep_row$bottomtemp
 	wind<-timestep_row$wind
+	jday<-timestep_row$jday
 
 	# get the current state of the model at the end of the previous timestep
 	DIC<-current_state$DIC
@@ -175,10 +176,10 @@ eval_timestep<-function(timestep,current_state){
 
 	#define depths for 2-box model
 	if(MODE==2){
-		depth<-ifelse(timestep >= BLOOM_START_DAY && timestep < mix_day,SMLD,COLUMN_DEPTH)
+		depth<-ifelse(jday >= BLOOM_START_DAY && jday < mix_day,SMLD,COLUMN_DEPTH)
 	} else {depth=SMLD}
 
-	if(MODE==2 && (timestep-mix_day)%%365==0){
+	if(MODE==2 && jday==mix_day){
 		#do the mixing
 		DIC<-calc_mix(DIC,BML_DIC)
 		NO3<-calc_mix(0,BML_NO3)
@@ -189,18 +190,17 @@ eval_timestep<-function(timestep,current_state){
 		POC<-calc_mix(0,POC)
 		TEPC<-calc_mix(0,TEPC)
 	}	
-	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,timestep)
+	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,timestep=jday)
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,stepdata$remin_overconsumption)
+	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep=jday,stepdata$remin_overconsumption)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
-	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep)
+	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
 	stepdata$PON<-eval_PON(PON,dNO3,bottomtemp,stepdata$remin_overconsumption)
 	stepdata$POC<-eval_POC(POC,dNO3,bottomtemp,stepdata$remin_overconsumption)
-	print("overcon:")
-	print(stepdata$remin_overconsumption)
+
 	if(MODE==2){
 
 		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp),stepdata$DIC)
@@ -210,11 +210,9 @@ eval_timestep<-function(timestep,current_state){
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
 	}
 	
-	print(depth)
 	print(paste("total_C_change",stepdata$total_C-current_state$total_C))	
-	print(paste("air-sea flux",stepdata$airseaFlux))	
-	print("eeeeep")	
-	print(as.data.frame(as.list(stepdata)))
+	print(paste("air-sea flux",stepdata$airseaFlux))		
+	print(paste("TIMESTEP",timestep))
 	as.data.frame(as.list(stepdata))
 }
 
