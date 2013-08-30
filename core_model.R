@@ -193,26 +193,15 @@ eval_timestep<-function(timestep,current_state){
 		NO3<-calc_mix(0,BML_NO3)
 		slDON<-calc_mix(slDON,0)
 		slDOC<-calc_mix(slDOC,0)
-<<<<<<< HEAD
-		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6)$pCO2[1]
-=======
 		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6,T=temp)$pCO2[1]
-		PON<-calc_mix(0,PON)
-		POC<-calc_mix(0,POC)
->>>>>>> f555a6a4001ba64fa0ef9b099e85fb82a4e7aead
 		TEPC<-calc_mix(0,TEPC)
 	}	
 	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,timestep=jday)
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-<<<<<<< HEAD
 	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep=jday,stepdata$remin_overconsumption)
-	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6)$pCO2[1]
-=======
-	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,stepdata$remin_overconsumption)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6,T=temp)$pCO2[1]
->>>>>>> f555a6a4001ba64fa0ef9b099e85fb82a4e7aead
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
 	stepdata$PON<-eval_PON(PON,dNO3,bottomtemp,stepdata$remin_overconsumption)

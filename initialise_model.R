@@ -5,10 +5,6 @@ library("seacarb")
 ################################################################################################
 ###############   Initialisation ########################################################
 
-	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
-	#run_length=3650
-	run_length=365+BLOOM_START_DAY
-	#run_length=20
 
 	#if mode is 1, set SMLD to COLUMN_DEPTH and bottom temps to top temps
 	if(MODE==1)
@@ -23,11 +19,10 @@ library("seacarb")
 
 
 
-	#define run_length as from 1st Jan 1 year, to immediately before spring bloom the next
 	#run_length=365+BLOOM_START_DAY
 
 	#multiyear run
-	run_length=365*2
+	run_length=(365*10)+BLOOM_START_DAY
 
 	#make jday term for mixing events etc
 	jday<-rep(seq(365),ceiling(run_length/365))[1:run_length]
