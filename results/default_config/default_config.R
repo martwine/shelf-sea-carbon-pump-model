@@ -67,9 +67,6 @@ delta_pCO2<-0
 ######## PARAMETER VALUES ########
 ##################################
 
-# scaling factor for gas exchange rate - used to scale Nightngale
-# default value 1.3 to translate quadratic for long-term averaged winds (see Wanninkhof 1992)
-KW_SCALING_FACTOR<-1.3
 
 # ammonium turnover rate
 NH4_turnover<-0 #uM day-1

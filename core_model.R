@@ -1,7 +1,4 @@
-#initalise model
 
-
-#for MODE==1 surface and bottom temp params should be equal and SMLD and COLUMN_DEPTH should be equal too
 
 source("eval_CO2_sys.R")
 library("seacarb")
@@ -16,7 +13,7 @@ source("default_config.R")
 
 calc_as_flux<-function(pCO2,pCO2_atmos,temp,wind){
 	deltapCO2<-KH_Molar_per_atmosphere("CO2",temp,S=35)*(pCO2_atmos-pCO2)*1e-6 #mol/l
-	k_w<-Nightingkw("CO2",temp,wind,35)*3600*24*1.3 #1.3 scaling factor between short and long-term winds
+	k_w<-Nightingkw("CO2",temp,wind,35)*3600*24*KW_SCALING_FACTOR # default 1.3 scaling factor between short and long-term winds
 	flux<-1e6*deltapCO2*1000*k_w #umol/m2/day
 	flux
 }

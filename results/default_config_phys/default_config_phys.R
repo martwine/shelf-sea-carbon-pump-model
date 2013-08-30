@@ -3,7 +3,7 @@
 #################################################################
 
 
-RUN_NAME<-"default_config"
+RUN_NAME<-"default_config_phys"
 
 out_dir<-"results"
 
@@ -49,7 +49,7 @@ MAX_WIND<-11.3 #m/s
 
 ## model is initialised with winter nitrate and the bloom period is described by start day and length to start the model off
 
-WINTER_NITRATE<-12 #uM
+WINTER_NITRATE<-0 #uM
 BLOOM_START_DAY<-88 #jday
 BLOOM_DURATION<-15 #days
 
@@ -67,9 +67,6 @@ delta_pCO2<-0
 ######## PARAMETER VALUES ########
 ##################################
 
-# scaling factor for gas exchange rate - used to scale Nightngale
-# default value 1.3 to translate quadratic for long-term averaged winds (see Wanninkhof 1992)
-KW_SCALING_FACTOR<-1.3
 
 # ammonium turnover rate
 NH4_turnover<-0 #uM day-1
