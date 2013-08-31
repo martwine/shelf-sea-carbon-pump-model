@@ -55,7 +55,7 @@ calc_POC_flux<-function(dNO3,overconsumption){
 calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,timestep){
 	#organic N that gets remineralised above redfield makes new POC at redfield. Called only in summer
 	#if remineralisation is C rich, return zero (a simplification)
-	if(timestep > (BLOOM_START_DAY+BLOOM_DURATION) && timestep < mix_day && timestep > 1e6){
+	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day && timestep > 1e6){
 		x<-(calc_slDON_deg(slDON,temp)*redfield)-calc_slDOC_deg(slDOC,temp)
 		slDON_remin_C_fixation<-ifelse(x>0,x,0)
 		
@@ -81,7 +81,7 @@ Q10_rate_scale<-function(temp){
 
 #calculate TEP production during summer period
 calc_TEPC_prod<-function(timestep){
-	if(timestep > (BLOOM_START_DAY+BLOOM_DURATION) && timestep < mix_day){
+	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day){
 		NH4_turnover*redfield*TEP_fraction	
 	} else {
 		0
@@ -97,12 +97,12 @@ eval_TEPC<-function(TEPC,temp,timestep,..){
 	TEPC+(calc_TEPC_prod(timestep)*ifelse(MODE==2,SMLD/BMLD,1))-calc_TEPC_deg(TEPC,temp)	
 }
 
-calc_PON_deg<-function(PON,temp){
-	PON*PONdeg*Q10_rate_scale(temp)
+calc_PON_deg<-function(PON){
+	ifelse(PON-PONdeg>0,PON-PONdeg,0)
 }
 
-calc_POC_deg<-function(POC,temp){
-	POC*POCdeg*Q10_rate_scale(temp)
+calc_POC_deg<-function(POC){
+    ifelse(POC-POCdeg>0,POC-POCdeg,0)
 }
 
 eval_slDON<-function(dNO3, slDON,temp){
@@ -115,21 +115,21 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 
 eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
-	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC,bottomtemp))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
+	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
 	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff-overconsumption/(1000*SMLD)
 }
 
 
-eval_PON<-function(PON,dNO3,temp,overconsumption){
-	PON+calc_PON_flux(dNO3,overconsumption)-calc_PON_deg(PON,temp)
+eval_PON<-function(PON,dNO3,overconsumption){
+	PON+calc_PON_flux(dNO3,overconsumption)-calc_PON_deg(PON)
 }
 
-eval_POC<-function(POC,dNO3,temp,overconsumption){
-	POC+calc_POC_flux(dNO3,overconsumption)-calc_POC_deg(POC,temp)
+eval_POC<-function(POC,dNO3,overconsumption){
+	POC+calc_POC_flux(dNO3,overconsumption)-calc_POC_deg(POC)
 }
 
 eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp){
-	BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)
+	BML_DIC+(calc_POC_deg(POC)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
@@ -181,7 +181,7 @@ eval_timestep<-function(timestep,current_state){
 
 	#define depths for 2-box model
 	if(MODE==2){
-		depth<-ifelse(jday >= BLOOM_START_DAY && jday < mix_day,SMLD,COLUMN_DEPTH)
+		depth<-ifelse(jday >= SPRING_START_DAY && jday < mix_day,SMLD,COLUMN_DEPTH)
 	} else {depth=SMLD}
 
 	if(MODE==2 && jday==mix_day){
@@ -201,8 +201,8 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6,T=temp)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
-	stepdata$PON<-eval_PON(PON,dNO3,bottomtemp,stepdata$remin_overconsumption)
-	stepdata$POC<-eval_POC(POC,dNO3,bottomtemp,stepdata$remin_overconsumption)
+	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption)
+	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption)
 
 	if(MODE==2){
 
@@ -234,7 +234,7 @@ model_run<-function(){
 	if(MODE==2){
 		model_output$BML_DIC=init_DIC
 		model_output$BML_NO3=WINTER_NITRATE
-		
+        
 	}
 	model_output$total_C=eval_C_inventory(depth=COLUMN_DEPTH,init_DIC,init_DIC,0,0,0)
 	print(model_output)	
