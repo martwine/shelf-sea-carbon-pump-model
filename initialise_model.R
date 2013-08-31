@@ -19,10 +19,10 @@ library("seacarb")
 
 
 
-	#run_length=365+BLOOM_START_DAY
+	#run_length=365+SPRING_START_DAY
 
 	#multiyear run
-	run_length=(365*10)+BLOOM_START_DAY
+	run_length=(365*10)+SPRING_START_DAY
 
 	#make jday term for mixing events etc
 	jday<-rep(seq(365),ceiling(run_length/365))[1:run_length]
@@ -43,11 +43,11 @@ library("seacarb")
 
 
 	#calc jday of mixing event
-	mix_day<-BLOOM_START_DAY+BLOOM_DURATION+SUMMER_LENGTH
+	mix_day<-SPRING_START_DAY+SPRING_DURATION+SUMMER_LENGTH
 
 	#define surface nitrate 'envelope'
-	#nday<-c(1,BLOOM_START_DAY,BLOOM_START_DAY+BLOOM_DURATION,run_length)
-	nday<-c(1,BLOOM_START_DAY,BLOOM_START_DAY+BLOOM_DURATION,365)
+	#nday<-c(1,SPRING_START_DAY,SPRING_START_DAY+SPRING_DURATION,run_length)
+	nday<-c(1,SPRING_START_DAY,SPRING_START_DAY+SPRING_DURATION,365)
 	nitrate<-c(WINTER_NITRATE,WINTER_NITRATE,0,0)
 	nitrate<-approx(nday,nitrate,n=365)
 	nitrate_cycle<-rep(nitrate$y,times=n_repeats)[1:run_length]
@@ -68,7 +68,7 @@ library("seacarb")
 	
 	#calculate C degradation rates as function of DON degradation rates
 	slDOC_deg<-slDOC_deg_factor*slDON_deg
-	POCdeg<-POCdeg_factor*PONdeg
+	PONdeg<-POCdeg/PONdeg_factor
 
 
 
