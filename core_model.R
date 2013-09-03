@@ -64,7 +64,7 @@ calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,timestep){
 
 			
 		} else {
-			y<-(calc_PON_deg(PON,temp)*redfield)-calc_POC_deg(POC,temp)
+			y<-(calc_PON_deg(PON)*redfield)-calc_POC_deg(POC)
 			PON_remin_C_fixation<-ifelse(y>0,y,0)
 			conc_change<-slDON_remin_C_fixation + PON_remin_C_fixation
 
@@ -98,11 +98,11 @@ eval_TEPC<-function(TEPC,temp,timestep,..){
 }
 
 calc_PON_deg<-function(PON){
-	ifelse(PON-PONdeg>0,PON-PONdeg,0)
+	ifelse(PON-PONdeg>0,PONdeg,0)
 }
 
 calc_POC_deg<-function(POC){
-    ifelse(POC-POCdeg>0,POC-POCdeg,0)
+    ifelse(POC-POCdeg>0,POCdeg,POC)
 }
 
 eval_slDON<-function(dNO3, slDON,temp){
@@ -116,6 +116,9 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
 	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
+   print(calc_POC_deg(POC))
+    print(depth)
+    print(remin_stuff   )
 	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff-overconsumption/(1000*SMLD)
 }
 
@@ -133,7 +136,7 @@ eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp){
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
-	BML_NO3+calc_PON_deg(PON,bottomtemp)/(1000*BMLD)
+	BML_NO3+calc_PON_deg(PON)/(1000*BMLD)
 }
 
 calc_mix<-function(sml_conc,bml_conc){
@@ -213,11 +216,12 @@ eval_timestep<-function(timestep,current_state){
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
 	}
 	
-	print(paste("total_C_change",stepdata$total_C-current_state$total_C))	
-	print(paste("air-sea flux",stepdata$airseaFlux))		
-	print(paste("TIMESTEP",timestep))
-	print(paste("POC",stepdata$POC))	
-	print(paste("PON",stepdata$PON))		
+	#print(paste("total_C_change",stepdata$total_C-current_state$total_C))
+	#print(paste("air-sea flux",stepdata$airseaFlux))
+	#print(paste("TIMESTEP",timestep))
+	#print(paste("POC",stepdata$POC))
+	#print(paste("PON",stepdata$PON))
+    #print(depth)
 	as.data.frame(as.list(stepdata))
 }
 
