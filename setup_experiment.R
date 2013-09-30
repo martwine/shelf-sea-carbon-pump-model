@@ -4,7 +4,7 @@ library(lhs)
 #### set-up multi-run experiments from a single config file #
 #############################################################
 
-#usage Rscript seup_experiment.R <name of experiment> <force_lhc?>
+#usage Rscript seup_experiment.R <name of experiment> <max runs> <chunk size>
 
 
 
@@ -55,6 +55,7 @@ names(changingvarlist)<-changingvars
 #how many runs and variable values?
 # if 3 values for variable in config file, this specifies min, max and dsitrbution (log vs linear)
 # if any other number of variables, each value is used in the lhc (needs to match n_vals)
+
 n_vals<-20 #number of values for each variable where specific values not set
 
 
