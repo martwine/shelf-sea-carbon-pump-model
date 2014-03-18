@@ -98,7 +98,7 @@ eval_TEPC<-function(TEPC,temp,timestep,..){
 }
 
 calc_PON_deg<-function(PON){
-	ifelse(PON-PONdeg>0,PONdeg,0)
+	ifelse(PON-PONdeg>0,PONdeg,PON)
 }
 
 calc_POC_deg<-function(POC){

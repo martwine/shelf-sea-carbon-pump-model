@@ -78,10 +78,10 @@ MODE=2
 
     redfield<-6.6 #C:N for 'Redfieldian' processes
 
-    #degradation rate of PON on bottom
-    ### between about 5 and 50 mmol per m2 per day
+    #degradation rate of POC on bottom
+    ### between about 1 and 50 mmol per m2 per day
 
-    POCdeg<-5000 #umol m-2 day-1
+    POCdeg<-1000 #umol m-2 day-1
 
 
 
