@@ -52,7 +52,7 @@ calc_POC_flux<-function(dNO3,overconsumption){
 }
 
 
-calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,timestep){
+calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,bottomtemp,timestep){
 	#organic N that gets remineralised above redfield makes new POC at redfield. Called only in summer
 	#if remineralisation is C rich, return zero (a simplification)
 	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day && timestep > 1e6){
@@ -64,7 +64,7 @@ calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,timestep){
 
 			
 		} else {
-			y<-(calc_PON_deg(PON)*redfield)-calc_POC_deg(POC)
+			y<-(calc_PON_deg(PON,bottomtemp)*redfield)-calc_POC_deg(POC,bottomtemp)
 			PON_remin_C_fixation<-ifelse(y>0,y,0)
 			conc_change<-slDON_remin_C_fixation + PON_remin_C_fixation
 
@@ -97,12 +97,14 @@ eval_TEPC<-function(TEPC,temp,timestep,..){
 	TEPC+(calc_TEPC_prod(timestep)*ifelse(MODE==2,SMLD/BMLD,1))-calc_TEPC_deg(TEPC,temp)	
 }
 
-calc_PON_deg<-function(PON){
-	ifelse(PON-PONdeg>0,PONdeg,PON)
+calc_PON_deg<-function(PON, temp){
+	deg<-PONdeg*Q10_rate_scale(temp)
+	ifelse(PON-deg>0,deg,PON)
 }
 
-calc_POC_deg<-function(POC){
-    ifelse(POC-POCdeg>0,POCdeg,POC)
+calc_POC_deg<-function(POC, temp){
+	deg<-POCdeg*Q10_rate_scale(temp)
+    ifelse(POC-deg>0,deg,POC)
 }
 
 eval_slDON<-function(dNO3, slDON,temp){
@@ -115,28 +117,28 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 
 eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
-	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
-   print(calc_POC_deg(POC))
+	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC,bottomtemp))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
+   print(calc_POC_deg(POC,bottomtemp))
     print(depth)
     print(remin_stuff   )
 	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff-overconsumption/(1000*SMLD)
 }
 
 
-eval_PON<-function(PON,dNO3,overconsumption){
-	PON+calc_PON_flux(dNO3,overconsumption)-calc_PON_deg(PON)
+eval_PON<-function(PON,dNO3,overconsumption,bottomtemp){
+	PON+calc_PON_flux(dNO3,overconsumption)-calc_PON_deg(PON,bottomtemp)
 }
 
-eval_POC<-function(POC,dNO3,overconsumption){
-	POC+calc_POC_flux(dNO3,overconsumption)-calc_POC_deg(POC)
+eval_POC<-function(POC,dNO3,overconsumption,bottomtemp){
+	POC+calc_POC_flux(dNO3,overconsumption)-calc_POC_deg(POC,bottomtemp)
 }
 
 eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp){
-	BML_DIC+(calc_POC_deg(POC)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)
+	BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
-	BML_NO3+calc_PON_deg(PON)/(1000*BMLD)
+	BML_NO3+calc_PON_deg(PON,bottomtemp)/(1000*BMLD)
 }
 
 calc_mix<-function(sml_conc,bml_conc){
@@ -174,6 +176,8 @@ eval_timestep<-function(timestep,current_state){
 	TEPC<-current_state$TEPC
 	POC<-current_state$POC
 	PON<-current_state$PON	
+	Benthic_POC<-current_state$Benthic_POC
+	Benthic_PON<-current_state$Benthic_PON
 
 	# just get BML ones for the 2-box model
 	if (MODE==2){
@@ -195,8 +199,16 @@ eval_timestep<-function(timestep,current_state){
 		slDOC<-calc_mix(slDOC,0)
 		pCO2<-carb(flag=15,init_TA*1e-6,DIC*1e-6,T=temp)$pCO2[1]
 		TEPC<-calc_mix(0,TEPC)
-	}	
-	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,timestep=jday)
+	}
+	
+	if(jday==SPRING_START_DAY){
+		Benthic_POC<-Benthic_POC + POC
+		POC<-0
+		Benthic_PON<-Benthic_PON + PON
+		PON<-0
+	} 
+		
+	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,bottomtemp,timestep=jday)
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
@@ -204,9 +216,11 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6,T=temp)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
-	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption)
-	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption)
-
+	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption,bottomtemp)
+	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)
+	stepdata$Benthic_POC<-Benthic_POC
+	stepdata$Benthic_PON<-Benthic_PON
+	
 	if(MODE==2){
 
 		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp),stepdata$DIC)
@@ -233,7 +247,7 @@ eval_timestep<-function(timestep,current_state){
 model_run<-function(){
 	source("initialise_model.R")
 	timestep = 1
-	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0,remin_overconsumption=0)
+	model_output<-data.frame(pCO2=init_pCO2,DIC=init_DIC,slDON=0,slDOC=0,airseaFlux=0,deltapCO2=delta_pCO2,TEPC=0,PON=0,POC=0,remin_overconsumption=0,Benthic_POC=0,Benthic_PON=0)
 	
 	if(MODE==2){
 		model_output$BML_DIC=init_DIC
