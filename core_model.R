@@ -156,7 +156,7 @@ eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC,Benthic_POC){
 	if(depth==SMLD&&MODE==2) {
 		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC*1000*BMLD) + Benthic_POC
 	} else {
-		(DIC*1000 + slDOC*1000 + TEPC*1000)*depth + (POC*1000*depth) + Benthic_POC
+		(DIC*1000 + slDOC*1000)*depth + (POC+TEPC)*1000*BMLD + Benthic_POC
 	}
 }
 
@@ -220,8 +220,8 @@ eval_timestep<-function(timestep,current_state){
   extra_DIC=0
   extra_BML_DIC=0
   if (MODE==2 && jday==SPRING_START_DAY){
-    #do the unmixing - turn all surface POC and TEPC into DIC, trn all deep slDOC in DIC
-    extra_DIC=(POC+TEPC)
+    #do the unmixing - turn all deep slDOC into DIC
+    #extra_DIC=(POC+TEPC)
     extra_BML_DIC=(slDOC)
     
   }
