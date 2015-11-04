@@ -55,7 +55,7 @@ calc_POC_flux<-function(dNO3,overconsumption){
 calc_remin_overconsumption<-function(PON,slDON,POC,slDOC,temp,bottomtemp,timestep){
 	#organic N that gets remineralised above redfield makes new POC at redfield. Called only in summer
 	#if remineralisation is C rich, return zero (a simplification)
-	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day && timestep > 1e6){
+	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day){
 		x<-(calc_slDON_deg(slDON,temp)*redfield)-calc_slDOC_deg(slDOC,temp)
 		slDON_remin_C_fixation<-ifelse(x>0,x,0)
 		
@@ -141,9 +141,16 @@ eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
 	BML_NO3+calc_PON_deg(PON,bottomtemp)/(1000*BMLD)
 }
 
+eval_Benthic_POC<-function(POC,TEPC){
+  #assume burial of carbon has no nitrogen associated with it
+  POC*BURIAL_FRAC_POC + TEPC*BURIAL_FRAC_TEPC
+}
+
 calc_mix<-function(sml_conc,bml_conc){
 	(sml_conc*SMLD + bml_conc*BMLD)/COLUMN_DEPTH
 }
+
+
 
 eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
 	if(depth==SMLD&&MODE==2) {
@@ -210,13 +217,7 @@ eval_timestep<-function(timestep,current_state){
 		TEPC<-calc_mix(0,TEPC)
 	}
 	
-	if(jday==SPRING_START_DAY){
-		Benthic_POC<-Benthic_POC + POC
-		POC<-0
-		Benthic_PON<-Benthic_PON + PON
-		PON<-0
-	} 
-		
+
 	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,bottomtemp,timestep=jday)
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
@@ -227,7 +228,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
 	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption,bottomtemp)
 	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)
-	stepdata$Benthic_POC<-Benthic_POC
+	stepdata$Benthic_POC<-eval_Benthic_POC(POC,TEPC)
 	stepdata$Benthic_PON<-Benthic_PON
 	
 	if(MODE==2){

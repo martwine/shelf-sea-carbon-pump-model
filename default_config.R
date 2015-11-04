@@ -70,6 +70,10 @@ MODE=2
 # Benthic fluxes       #
 ########################
 
+ # fractions of particulate matter permanently buried per timestep
+ BURIAL_FRAC_POC = 0.005
+ BURIAL_FRAC_TEPC = 0.005
+
  #in umol m-2 day-1
  resusp_DIC_SUMMER = 0  
  resusp_DIC_WINTER = 0  
