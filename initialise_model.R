@@ -16,13 +16,15 @@ library("seacarb")
 	#calc bottom mixed layer depth
 	BMLD<-COLUMN_DEPTH-SMLD
 
-
+    #round to integers to prevent breakage
+    SUMMER_LENGTH<-round(SUMMER_LENGTH)
+    SPRING_START_DAY<-round(SPRING_START_DAY)
 
 
 	#run_length=365+SPRING_START_DAY
 
 	#multiyear run
-	run_length=(365*10)+SPRING_START_DAY
+	run_length=(365*2)+SPRING_START_DAY
 
 	#make jday term for mixing events etc
 	jday<-rep(seq(365),ceiling(run_length/365))[1:run_length]

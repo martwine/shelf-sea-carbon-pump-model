@@ -66,6 +66,12 @@ MODE=2
     SPRING_START_DAY<-88 #jday
     SPRING_DURATION<-15 #days
 
+########################
+# Benthic fluxes       #
+########################
+    
+ resusp_DIC_SUMMER = 0
+ resusp_DIC_WINTER = 0
 
 
 

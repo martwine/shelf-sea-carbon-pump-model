@@ -133,8 +133,8 @@ eval_POC<-function(POC,dNO3,overconsumption,bottomtemp){
 	POC+calc_POC_flux(dNO3,overconsumption)-calc_POC_deg(POC,bottomtemp)
 }
 
-eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp){
-	BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)
+eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp, resusp_DIC){
+  BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)+resusp_DIC
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
@@ -167,6 +167,12 @@ eval_timestep<-function(timestep,current_state){
 	bottomtemp<-timestep_row$bottomtemp
 	wind<-timestep_row$wind
 	jday<-timestep_row$jday
+	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day){
+	  resusp_DIC=resusp_DIC_SUMMER
+	}else{
+	  resusp_DIC=resusp_DIC_WINTER
+	}
+	
 
 	# get the current state of the model at the end of the previous timestep
 	DIC<-current_state$DIC
@@ -223,7 +229,7 @@ eval_timestep<-function(timestep,current_state){
 	
 	if(MODE==2){
 
-		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp),stepdata$DIC)
+		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp,resusp_DIC),stepdata$DIC)
 		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON,bottomtemp),ifelse(timestep==mix_day,NO3,BML_NO3))	
 		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
 	} else {
