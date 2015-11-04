@@ -69,9 +69,17 @@ MODE=2
 ########################
 # Benthic fluxes       #
 ########################
-    
- resusp_DIC_SUMMER = 0
- resusp_DIC_WINTER = 0
+
+ #in umol m-2 day-1
+ resusp_DIC_SUMMER = 0  
+ resusp_DIC_WINTER = 0  
+ 
+######################
+# Trawl events       #
+######################
+ 
+ TRAWL_DAY = 10
+ TRAWL_DIC_RELEASE = 1e6 #12g C per m2
 
 
 

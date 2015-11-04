@@ -115,9 +115,9 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 	slDOC+calc_prod_slDOC(dNO3)-calc_slDOC_deg(slDOC,temp)
 }
 
-eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,...){
+eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,resusp_DIC,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
-	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC,bottomtemp))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp))
+	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC,bottomtemp))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp)+(resusp_DIC/(1000*depth)))
    print(calc_POC_deg(POC,bottomtemp))
     print(depth)
     print(remin_stuff   )
@@ -134,7 +134,7 @@ eval_POC<-function(POC,dNO3,overconsumption,bottomtemp){
 }
 
 eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp, resusp_DIC){
-  BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)+resusp_DIC
+  BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)+resusp_DIC/(1000*BMLD)
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
@@ -167,12 +167,15 @@ eval_timestep<-function(timestep,current_state){
 	bottomtemp<-timestep_row$bottomtemp
 	wind<-timestep_row$wind
 	jday<-timestep_row$jday
-	if(timestep > (SPRING_START_DAY+SPRING_DURATION) && timestep < mix_day){
+	#include constant DIC flux from sediment (default value 0)
+	if(jday> (SPRING_START_DAY+SPRING_DURATION) && jday < mix_day){
 	  resusp_DIC=resusp_DIC_SUMMER
 	}else{
 	  resusp_DIC=resusp_DIC_WINTER
 	}
 	
+	#add in DIC release from trawl event on TRAWL_DAY
+	if(jday==TRAWL_DAY){resusp_DIC=resusp_DIC+TRAWL_DIC_RELEASE}
 
 	# get the current state of the model at the end of the previous timestep
 	DIC<-current_state$DIC
@@ -218,7 +221,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep=jday,stepdata$remin_overconsumption)
+	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep=jday,stepdata$remin_overconsumption,resusp_DIC)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6,T=temp)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
