@@ -71,7 +71,7 @@ MODE=2
 ########################
 
  # fractions of particulate matter permanently buried per timestep
- BURIAL_FRAC_POC = 0.005
+ BURIAL_FRAC_POC = 0.001
  BURIAL_FRAC_TEPC = 0.005
 
  #in umol m-2 day-1
@@ -83,7 +83,7 @@ MODE=2
 ######################
  
  TRAWL_DAY = 10
- TRAWL_DIC_RELEASE = 1e6 #12g C per m2
+ TRAWL_DIC_RELEASE = 0 #12g C per m2
 
 
 
@@ -96,10 +96,10 @@ MODE=2
 
     redfield<-6.6 #C:N for 'Redfieldian' processes
 
-    #degradation rate of POC on bottom
-    ### between about 1 and 50 mmol per m2 per day
+    #degradation rate of POC/N in BML (which includes notional nepheloid layer / non-permanently buried surface sediment)
+    ### previously a fixed rate but now a fractional term
 
-    POCdeg<-1000 #umol m-2 day-1
+    PONdeg<-0.005 #day-1
 
 
 
@@ -108,17 +108,17 @@ MODE=2
 ############################
 
     #ratio of POC degradation to PON degradation
-    # redfield for redfieldian run
-    PONdeg_factor<-redfield
+    # 1for redfieldian run
+    POCdeg_factor<-1
 
     ## Proportion of spring bloom N turned into semi-labile DON
     # zero for redfieldian run
-    nitrate_to_slDON_conv<-0
+    nitrate_to_slDON_conv<-0.3
 
 
     # ammonium turnover rate
     # zero for redfieldian run
-    NH4_turnover<-0 #uM day-1
+    NH4_turnover<-0.25 #uM day-1
 
     # fraction of summer recycled production which produces TEPC
     TEP_fraction<-0.1
@@ -131,6 +131,7 @@ MODE=2
     slDON_deg<-0.02 #day-1
 
     #degradation rate of sl_DOC in SML as proportion of DON degradation
+    #1 for Redfieldian run
     slDOC_deg_factor<-0.5
 
 

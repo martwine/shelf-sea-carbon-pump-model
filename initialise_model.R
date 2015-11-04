@@ -68,9 +68,9 @@ library("seacarb")
 	#wind speed cycle
 	wind_speed<-MIN_WIND+(0.5*(MAX_WIND-MIN_WIND))*(1+sin((seq(from=90,to=450,length.out=365)*pi)/180))
 	
-	#calculate C degradation rates as function of DON degradation rates
+	#calculate orgC degradation rates as function of orgN degradation rates
 	slDOC_deg<-slDOC_deg_factor*slDON_deg
-	PONdeg<-POCdeg/PONdeg_factor
+	POCdeg<-PONdeg*POCdeg_factor
 
 
 

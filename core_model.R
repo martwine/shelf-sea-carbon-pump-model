@@ -40,13 +40,13 @@ calc_prod_slDOC<-function(dNO3){
 }
 
 calc_PON_flux<-function(dNO3,overconsumption){
-	conc_change=(-dNO3*(1-nitrate_to_slDON_conv)+(overconsumption/redfield))
+	conc_change=(-dNO3*(1-nitrate_to_slDON_conv)+(overconsumption/(redfield*1000*SMLD)))
 	amount=conc_change*1000*SMLD
 	amount
 }
 
 calc_POC_flux<-function(dNO3,overconsumption){
-	conc_change<-(((-dNO3*redfield)-calc_prod_slDOC(dNO3))+overconsumption)
+	conc_change<-(((-dNO3*redfield)-calc_prod_slDOC(dNO3))+(overconsumption/(1000*SMLD)))
 	amount<-conc_change*1000*SMLD
 	amount
 }
@@ -94,17 +94,16 @@ calc_TEPC_deg<-function(TEPC,temp){
 }
 
 eval_TEPC<-function(TEPC,temp,timestep,..){
-	TEPC+(calc_TEPC_prod(timestep)*ifelse(MODE==2,SMLD/BMLD,1))-calc_TEPC_deg(TEPC,temp)	
+	TEPC+(calc_TEPC_prod(timestep)*ifelse(MODE==2,SMLD/BMLD,1))-calc_TEPC_deg(TEPC,temp)-TEPC*BURIAL_FRAC_TEPC	
 }
 
 calc_PON_deg<-function(PON, temp){
-	deg<-PONdeg*Q10_rate_scale(temp)
-	ifelse(PON-deg>0,deg,PON)
+	PON*PONdeg*Q10_rate_scale(temp)
 }
 
 calc_POC_deg<-function(POC, temp){
-	deg<-POCdeg*Q10_rate_scale(temp)
-    ifelse(POC-deg>0,deg,POC)
+	POC*POCdeg*Q10_rate_scale(temp)
+  
 }
 
 eval_slDON<-function(dNO3, slDON,temp){
@@ -117,7 +116,7 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 
 eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,resusp_DIC,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
-	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,((calc_POC_deg(POC,bottomtemp))/(1000*depth))+calc_TEPC_deg(TEPC,bottomtemp)+(resusp_DIC/(1000*depth)))
+	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp)+(resusp_DIC/(1000*depth)))
    print(calc_POC_deg(POC,bottomtemp))
     print(depth)
     print(remin_stuff   )
@@ -126,24 +125,25 @@ eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth
 
 
 eval_PON<-function(PON,dNO3,overconsumption,bottomtemp){
-	PON+calc_PON_flux(dNO3,overconsumption)-calc_PON_deg(PON,bottomtemp)
+	PON+(calc_PON_flux(dNO3,overconsumption)/(1000*BMLD))-calc_PON_deg(PON,bottomtemp)
 }
 
 eval_POC<-function(POC,dNO3,overconsumption,bottomtemp){
-	POC+calc_POC_flux(dNO3,overconsumption)-calc_POC_deg(POC,bottomtemp)
+	POC+(calc_POC_flux(dNO3,overconsumption)/(1000*BMLD))-calc_POC_deg(POC,bottomtemp)-POC*BURIAL_FRAC_POC
 }
 
 eval_BML_DIC<-function(BML_DIC, POC, TEPC, bottomtemp, resusp_DIC){
-  BML_DIC+(calc_POC_deg(POC,bottomtemp)/(1000*BMLD))+calc_TEPC_deg(TEPC,bottomtemp)+resusp_DIC/(1000*BMLD)
+  BML_DIC+calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp)+resusp_DIC/(1000*BMLD)
 }
 
 eval_BML_NO3<-function(BML_NO3,PON,bottomtemp){
-	BML_NO3+calc_PON_deg(PON,bottomtemp)/(1000*BMLD)
+	BML_NO3+calc_PON_deg(PON,bottomtemp)
 }
 
-eval_Benthic_POC<-function(POC,TEPC){
+eval_Benthic_POC<-function(Benthic_POC,POC,TEPC,depth,resusp_DIC){
   #assume burial of carbon has no nitrogen associated with it
-  POC*BURIAL_FRAC_POC + TEPC*BURIAL_FRAC_TEPC
+  POCdepth<-ifelse(depth==COLUMN_DEPTH,depth,BMLD)
+  Benthic_POC+(POC*BURIAL_FRAC_POC + TEPC*BURIAL_FRAC_TEPC)*1000*POCdepth - resusp_DIC
 }
 
 calc_mix<-function(sml_conc,bml_conc){
@@ -154,9 +154,9 @@ calc_mix<-function(sml_conc,bml_conc){
 
 eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
 	if(depth==SMLD&&MODE==2) {
-		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC)
+		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC) + Benthic_POC
 	} else {
-		(DIC*1000 + slDOC*1000 + TEPC*1000)*depth + POC
+		(DIC*1000 + slDOC*1000 + TEPC*1000)*depth + POC + Benthic_POC
 	}
 }
 
@@ -228,7 +228,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
 	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption,bottomtemp)
 	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)
-	stepdata$Benthic_POC<-eval_Benthic_POC(POC,TEPC)
+	stepdata$Benthic_POC<-eval_Benthic_POC(Benthic_POC,POC,TEPC,depth,resusp_DIC)
 	stepdata$Benthic_PON<-Benthic_PON
 	
 	if(MODE==2){
