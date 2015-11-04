@@ -152,11 +152,11 @@ calc_mix<-function(sml_conc,bml_conc){
 
 
 
-eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC){
+eval_C_inventory<-function(depth, DIC, BML_DIC, slDOC,TEPC,POC,Benthic_POC){
 	if(depth==SMLD&&MODE==2) {
-		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC) + Benthic_POC
+		(DIC*1000*SMLD) + (BML_DIC*1000*BMLD) + (slDOC*1000*SMLD) + (TEPC*1000*BMLD) + (POC*1000*BMLD) + Benthic_POC
 	} else {
-		(DIC*1000 + slDOC*1000 + TEPC*1000)*depth + POC + Benthic_POC
+		(DIC*1000 + slDOC*1000 + TEPC*1000)*depth + (POC*1000*depth) + Benthic_POC
 	}
 }
 
@@ -217,12 +217,20 @@ eval_timestep<-function(timestep,current_state){
 		TEPC<-calc_mix(0,TEPC)
 	}
 	
+  extra_DIC=0
+  extra_BML_DIC=0
+  if (MODE==2 && jday==SPRING_START_DAY){
+    #do the unmixing - turn all surface POC and TEPC into DIC, trn all deep slDOC in DIC
+    extra_DIC=(POC+TEPC)
+    extra_BML_DIC=(slDOC)
+    
+  }
 
 	stepdata$remin_overconsumption<-calc_remin_overconsumption(PON,slDON,POC,slDOC,temp,bottomtemp,timestep=jday)
 	stepdata$slDOC<-eval_slDOC(dNO3, slDOC, temp)
 	stepdata$slDON<-eval_slDON(dNO3, slDON, temp)
 	stepdata$airseaFlux<-calc_as_flux(pCO2,pCO2_atmos,temp,wind)
-	stepdata$DIC<-eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep=jday,stepdata$remin_overconsumption,resusp_DIC)
+	stepdata$DIC<-extra_DIC+eval_DIC(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep=jday,stepdata$remin_overconsumption,resusp_DIC)
 	stepdata$pCO2<-carb(flag=15,init_TA*1e-6,stepdata$DIC*1e-6,T=temp)$pCO2[1]
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
@@ -233,11 +241,11 @@ eval_timestep<-function(timestep,current_state){
 	
 	if(MODE==2){
 
-		stepdata$BML_DIC<-ifelse(depth==SMLD,eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp,resusp_DIC),stepdata$DIC)
+		stepdata$BML_DIC<-ifelse(depth==SMLD,extra_BML_DIC+eval_BML_DIC(BML_DIC,POC,TEPC,bottomtemp,resusp_DIC),stepdata$DIC)
 		stepdata$BML_NO3<-ifelse(depth==SMLD,eval_BML_NO3(BML_NO3,PON,bottomtemp),ifelse(timestep==mix_day,NO3,BML_NO3))	
-		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
+		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,stepdata$BML_DIC,stepdata$slDOC,stepdata$TEPC,stepdata$POC,stepdata$Benthic_POC)
 	} else {
-		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,stepdata$slDOC,stepdata$TEPC,stepdata$POC)
+		stepdata$total_C<-eval_C_inventory(depth,stepdata$DIC,BML_DIC=0,stepdata$slDOC,stepdata$TEPC,stepdata$POC,stepdata$Benthic_POC)
 	}
 	
 	#print(paste("total_C_change",stepdata$total_C-current_state$total_C))
@@ -264,7 +272,7 @@ model_run<-function(){
 		model_output$BML_NO3=WINTER_NITRATE
         
 	}
-	model_output$total_C=eval_C_inventory(depth=COLUMN_DEPTH,init_DIC,init_DIC,0,0,0)
+	model_output$total_C=eval_C_inventory(depth=COLUMN_DEPTH,init_DIC,init_DIC,0,0,0,0)
 	print(model_output)	
 	while(timestep<run_length){
 		current_state<-model_output[timestep,]
