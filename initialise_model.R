@@ -19,7 +19,7 @@ library("seacarb")
     #round to integers to prevent breakage
     SUMMER_LENGTH<-round(SUMMER_LENGTH)
     SPRING_START_DAY<-round(SPRING_START_DAY)
-
+    TRAWL_DAY<-round(TRAWL_DAY)
 
 	#run_length=365+SPRING_START_DAY
 
