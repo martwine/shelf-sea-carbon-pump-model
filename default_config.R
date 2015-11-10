@@ -82,8 +82,8 @@ MODE=2
 # Trawl events       #
 ######################
  
- TRAWL_DAY = 10
- TRAWL_DIC_RELEASE = 0 #12g C per m2
+ TRAWL_DAY = 278
+ TRAWL_DIC_RELEASE = 1e6 #12g C per m2
 
 
 
@@ -118,10 +118,10 @@ MODE=2
 
     # ammonium turnover rate
     # zero for redfieldian run
-    NH4_turnover<-0.25 #uM day-1
+    NH4_turnover<-0.3 #uM day-1
 
     # fraction of summer recycled production which produces TEPC
-    TEP_fraction<-0.1
+    TEP_fraction<-0.05
 
     ## C:N ratio of semi-labile DOM produced during bloom
     slDOM_C_TO_N<-redfield
