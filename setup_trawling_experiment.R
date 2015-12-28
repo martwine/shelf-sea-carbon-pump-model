@@ -104,8 +104,17 @@ dir.create(paste("experiments/",out_dir,sep=""))
 
 no_trawl_matrix <- run_matrix
 no_trawl_matrix$TRAWL_DIC_RELEASE<-0
+no_trawl_matrix$SEDIMENT_POC_CONTENT<-0
 
-run_matrix<-rbind(run_matrix,no_trawl_matrix)
+no_clim_matrix<- run_matrix
+no_clim_matrix$CLIMATE_WARMING<-0
+
+baseline_matrix<- run_matrix
+baseline_matrix$TRAWL_DIC_RELEASE<-0
+baseline_matrix$SEDIMENT_POC_CONTENT<-0
+basleine_matrix$CLIMATE_WARMING<-0
+
+run_matrix<-rbind(run_matrix,no_trawl_matrix, no_clim_matrix, baseline_matrix)
 
 #write config files
 for(i in 1:nrow(run_matrix)) {
