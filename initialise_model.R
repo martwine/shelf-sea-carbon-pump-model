@@ -37,8 +37,8 @@ library("seacarb")
 
 	#APPLY warming for climate scenarios
 		MAX_SURFACE_TEMP=	MAX_SURFACE_TEMP+CLIMATE_WARMING
-	MIN_SURFACE_TEMP=MIN_SURFACE_TEMP+CLIMATE_WARMING
 
+	MIN_SURFACE_TEMP=MIN_SURFACE_TEMP+CLIMATE_WARMING
 	## keep things simple and control bottom temps from surface temps (see init file)
 	
 	MIN_BOTTOM_TEMP<-MIN_SURFACE_TEMP
@@ -75,6 +75,8 @@ library("seacarb")
 	#initalise DIC from pCO2 and estimated TA 
 	init_DIC<-1e6*carb(flag=24,init_pCO2,init_TA*1e-6,T=surface_temp[1])$DIC[1]
 	print(paste("init DIC:", init_DIC))
+	print("surface temps")
+	print(c(MAX_SURFACE_TEMP,MIN_SURFACE_TEMP))
 	
 	#wind speed cycle
 	wind_speed<-MIN_WIND+(0.5*(MAX_WIND-MIN_WIND))*(1+sin((seq(from=90,to=450,length.out=365)*pi)/180))
@@ -85,7 +87,10 @@ library("seacarb")
 
   #calculate release per trawl of POC - assumes density of sediments is 1 therefore trawl depth of 1cm resuspends 10 kg of material
 	TRAWL_POC_RELEASE = SEDIMENT_POC_CONTENT*TRAWL_DEPTH*10
-	
+	print(TRAWL_POC_RELEASE)
+	#converyt to umoles
+	TRAWL_POC_RELEASE = TRAWL_POC_RELEASE*1e6/12
+	print(TRAWL_POC_RELEASE)
 	
 
 	#initalise_data

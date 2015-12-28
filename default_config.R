@@ -95,7 +95,7 @@ MODE=2
  SEDIMENT_POC_CONTENT = 2 #g/kg from Ruth (Sean Gas field 0.5, Oyster Grounds 2, North Dogger 4)
  TRAWL_DEPTH = 5 #cm
    #amount of POC released per trawl calculated in model init file
- TRAWL_POC_REDEP_FRAC = 0.4 #amount of POC redeposited at reference Temp (implicitly accounts for what would have been remineralised in the absence of trawl also)
+ TRAWL_POC_REDEP_FRAC = 0.8 #amount of POC redeposited at reference Temp (implicitly accounts for what would have been remineralised in the absence of trawl also)
 
 
 ########################

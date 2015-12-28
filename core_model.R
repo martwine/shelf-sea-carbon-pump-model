@@ -124,9 +124,9 @@ eval_slDOC<-function(dNO3, slDOC, temp){
 eval_DIC<-function(DIC,dNO3,pCO2,pCO2_atmos,temp,bottomtemp,slDOC,POC,TEPC,depth,wind,timestep,overconsumption,resusp_DIC,...){
 	#remin to DIC in SMLD in 1-box mode, in 2 box mode this happens at depth
 	remin_stuff<-ifelse(depth==SMLD&&MODE==2,0,calc_POC_deg(POC,bottomtemp)+calc_TEPC_deg(TEPC,bottomtemp)+(resusp_DIC/(1000*depth)))
-   print(calc_POC_deg(POC,bottomtemp))
-    print(depth)
-    print(remin_stuff   )
+   #print(calc_POC_deg(POC,bottomtemp))
+    #print(depth)
+    #print(remin_stuff)
 	DIC-calc_DIC_uptake_from_NO3(dNO3)+((calc_as_flux(pCO2,pCO2_atmos,temp,wind)/depth)/1000)+calc_slDOC_deg(slDOC,temp)-calc_TEPC_prod(timestep)+remin_stuff-overconsumption/(1000*SMLD)
 }
 
@@ -190,7 +190,7 @@ eval_timestep<-function(timestep,current_state){
 	
 	#add in DIC release from trawl event on TRAWL_DAY
 	if(jday==TRAWL_DAY){resusp_DIC=resusp_DIC+TRAWL_DIC_RELEASE}
-	ifelse(jday==TRAWL_DAY,TRAWL_POC=calc_trawl_POC_input(bottomtemp),0)
+	TRAWL_POC=ifelse(jday==TRAWL_DAY,calc_trawl_POC_input(bottomtemp),0)
 
 	# get the current state of the model at the end of the previous timestep
 	DIC<-current_state$DIC
@@ -214,7 +214,10 @@ eval_timestep<-function(timestep,current_state){
 	if(MODE==2){
 		depth<-ifelse(jday >= SPRING_START_DAY && jday < mix_day,SMLD,COLUMN_DEPTH)
 	} else {depth=SMLD}
-
+	if(MODE==2){
+	  bdepth<-ifelse(jday >= SPRING_START_DAY && jday < mix_day,SMLD,COLUMN_DEPTH)
+	} else {bdepth=SMLD}
+	
 	if(MODE==2 && jday==mix_day){
 		#do the mixing
 		DIC<-calc_mix(DIC,BML_DIC)
@@ -243,7 +246,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
 	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption,bottomtemp)
-	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)+TRAWL_POC
+	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)+(TRAWL_POC/(1000*bdepth))
 	stepdata$Benthic_POC<-eval_Benthic_POC(Benthic_POC,POC,TEPC,depth,resusp_DIC)
 	stepdata$Benthic_PON<-Benthic_PON
 	
@@ -258,8 +261,11 @@ eval_timestep<-function(timestep,current_state){
 	
 	#print(paste("total_C_change",stepdata$total_C-current_state$total_C))
 	#print(paste("air-sea flux",stepdata$airseaFlux))
-	#print(paste("TIMESTEP",timestep))
-	#print(paste("POC",stepdata$POC))
+	print(paste("TIMESTEP",timestep))
+	print(paste("POC",stepdata$POC))
+	print(paste("bottom_temp",bottomtemp))
+	print(paste("Q10ratescale",Q10_rate_scale(bottomtemp)))
+	print(paste("TRAWL POC IN",TRAWL_POC))
 	#print(paste("PON",stepdata$PON))
     #print(depth)
 	as.data.frame(as.list(stepdata))
