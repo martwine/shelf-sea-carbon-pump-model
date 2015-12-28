@@ -35,6 +35,17 @@ library("seacarb")
 
 	#Temperature cycle calculated from max and min values (1st March min, 1st September max)
 
+	#APPLY warming for climate scenarios
+		MAX_SURFACE_TEMP=	MAX_SURFACE_TEMP+CLIMATE_WARMING
+	MIN_SURFACE_TEMP=MIN_SURFACE_TEMP+CLIMATE_WARMING
+
+	## keep things simple and control bottom temps from surface temps (see init file)
+	
+	MIN_BOTTOM_TEMP<-MIN_SURFACE_TEMP
+	MAX_BOTTOM_TEMP<-MAX_SURFACE_TEMP-SUMMER_T_DIFF
+	
+	
+	
 	surface_temp_cycle<-MIN_SURFACE_TEMP+(0.5*(MAX_SURFACE_TEMP-MIN_SURFACE_TEMP))*(1+sin((seq(from=-90,to=270,length.out=365)*pi)/180))
 
 	surface_temp<-c(surface_temp_cycle[(365-OFFSET):365],surface_temp_cycle[1:(365-OFFSET-1)])

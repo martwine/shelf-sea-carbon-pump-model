@@ -29,11 +29,18 @@ MODE=2
     ## water column depth
     COLUMN_DEPTH<-100
 
+    
+    
+    CLIMATE_WARMING<-0 #add this value on to all temps in modle init file
 
     ## sine wave temperature variation defined from these values
 
     MIN_SURFACE_TEMP<-6
     MAX_SURFACE_TEMP<-12
+    
+    SUMMER_T_DIFF<- 4 #difference between surface and bottom in summer
+    
+
 
 
     OFFSET<-59 # days to 1st March (temperature min date)
@@ -47,6 +54,7 @@ MODE=2
     MIN_WIND<-7.2 #m/s
     MAX_WIND<-11.3 #m/s
 
+    
 
     ## summer length defines when the BML and SML are mixed into a single box again (they separate at the onset of the spring bloom)
     SUMMER_LENGTH<-150 #days
@@ -147,5 +155,3 @@ MODE=2
     Q10<-2
 
 
-    MIN_BOTTOM_TEMP<-5
-    MAX_BOTTOM_TEMP<-10
