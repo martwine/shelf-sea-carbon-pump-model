@@ -31,6 +31,7 @@ calc_slDOC_deg<-function(slDOC,temp){
 	slDOC*slDOC_deg*Q10_rate_scale(temp)
 }
 
+
 calc_prod_slDON<-function(dNO3){
 	-dNO3*nitrate_to_slDON_conv
 }
@@ -100,6 +101,12 @@ eval_TEPC<-function(TEPC,temp,timestep,..){
 calc_PON_deg<-function(PON, temp){
 	PON*PONdeg*Q10_rate_scale(temp)
 }
+
+calc_trawl_POC_input<-function(temp){
+  TRAWL_POC_RELEASE*(1- TRAWL_POC_REDEP_FRAC)*Q10_rate_scale(temp)
+}
+
+
 
 calc_POC_deg<-function(POC, temp){
 	POC*POCdeg*Q10_rate_scale(temp)
@@ -183,6 +190,7 @@ eval_timestep<-function(timestep,current_state){
 	
 	#add in DIC release from trawl event on TRAWL_DAY
 	if(jday==TRAWL_DAY){resusp_DIC=resusp_DIC+TRAWL_DIC_RELEASE}
+	ifelse(jday==TRAWL_DAY,TRAWL_POC=calc_trawl_POC_input(bottomtemp),0)
 
 	# get the current state of the model at the end of the previous timestep
 	DIC<-current_state$DIC
@@ -235,7 +243,7 @@ eval_timestep<-function(timestep,current_state){
 	stepdata$deltapCO2<-pCO2_atmos-stepdata$pCO2
 	stepdata$TEPC<-eval_TEPC(TEPC,bottomtemp,timestep=jday)
 	stepdata$PON<-eval_PON(PON,dNO3,stepdata$remin_overconsumption,bottomtemp)
-	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)
+	stepdata$POC<-eval_POC(POC,dNO3,stepdata$remin_overconsumption,bottomtemp)+TRAWL_POC
 	stepdata$Benthic_POC<-eval_Benthic_POC(Benthic_POC,POC,TEPC,depth,resusp_DIC)
 	stepdata$Benthic_PON<-Benthic_PON
 	

@@ -72,7 +72,10 @@ library("seacarb")
 	slDOC_deg<-slDOC_deg_factor*slDON_deg
 	POCdeg<-PONdeg*POCdeg_factor
 
-
+  #calculate release per trawl of POC - assumes density of sediments is 1 therefore trawl depth of 1cm resuspends 10 kg of material
+	TRAWL_POC_RELEASE = SEDIMENT_POC_CONTENT*TRAWL_DEPTH*10
+	
+	
 
 	#initalise_data
 	box<-data.frame(seq(run_length),nitrate_cycle)
