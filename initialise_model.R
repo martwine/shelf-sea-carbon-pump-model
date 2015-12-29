@@ -12,10 +12,11 @@ library("seacarb")
 			SMLD<-COLUMN_DEPTH
 			MIN_BOTTOM_TEMP<-MIN_SURFACE_TEMP
 			MAX_BOTTOM_TEMP<-MAX_SURFACE_TEMP
-		}
+      BMLD<-COLUMN_DEPTH
+		}else{
 	#calc bottom mixed layer depth
 	BMLD<-COLUMN_DEPTH-SMLD
-
+  }
     #round to integers to prevent breakage
     SUMMER_LENGTH<-round(SUMMER_LENGTH)
     SPRING_START_DAY<-round(SPRING_START_DAY)
