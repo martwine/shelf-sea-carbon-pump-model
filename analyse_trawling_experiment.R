@@ -72,9 +72,9 @@ parse_data<-function(trawlclim_data_file,notrawl_data_file,noclim_data_file,base
 	mean_storage_baseline=mean(baselinetotalc)
 	
 
-	trawlclim_delta_cumulativeasflux<-tail(cumsum(baseline_data$airseaFlux),1)-tail(cumsum(trawlclim_data$airseaFlux),1)
-	trawlonly_delta_cumulativeasflux<-tail(cumsum(baseline_data$airseaFlux),1)-tail(cumsum(noclim_data$airseaFlux),1)
-	climonly_delta_cumulativeasflux<-tail(cumsum(baseline_data$airseaFlux),1)-tail(cumsum(notrawl_data$airseaFlux),1)
+	trawlclim_delta_cumulativeasflux<-tail(cumsum(tail(baseline_data$airseaFlux),365),1)-tail(cumsum(tail(trawlclim_data$airseaFlux),356),1)
+	trawlonly_delta_cumulativeasflux<-tail(cumsum(tail(baseline_data$airseaFlux),365),1)-tail(cumsum(tail(noclim_data$airseaFlux),365),1)
+	climonly_delta_cumulativeasflux<-tail(cumsum(tail(baseline_data$airseaFlux),365),1)-tail(cumsum(tail(notrawl_data$airseaFlux),365),1)
 	
 	t(as.data.frame(c(delta_total_carbon_trawlclim,
 	                  delta_total_carbon_notrawl,
